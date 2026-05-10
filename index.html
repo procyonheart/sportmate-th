@@ -1,0 +1,1221 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SportMate TH แอปหาเพื่อนออกกำลังกายที่ดีที่สุดในไทย จับคู่นักกีฬา วิ่ง ฟุตบอล โยคะ มวยไทย ด้วย GPS ใกล้บ้านคุณ ดาวน์โหลดฟรี มีผู้ใช้กว่า 50,000 คน">
+<title>SportMate TH</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@700;900&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: '#FF4D1C',
+          secondary: '#1DB954',
+          accent: '#FFB800',
+          surface: '#1A1A1A',
+          bgbase: '#0F0F0F',
+          muted: '#A0A0A0',
+        },
+        fontFamily: {
+          display: ['Kanit', 'sans-serif'],
+          body: ['Sarabun', 'sans-serif'],
+        },
+      }
+    }
+  }
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background-color: #0F0F0F;
+    color: #F5F5F5;
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Kanit', sans-serif;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0F0F0F; }
+  ::-webkit-scrollbar-thumb { background: #FF4D1C60; border-radius: 3px; }
+
+  /* Noise grain texture */
+  .noise-layer {
+    position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
+  /* Branded shadow utility */
+  .shadow-brand { box-shadow: 0 2px 8px rgba(255,77,28,0.1), 0 8px 28px rgba(255,77,28,0.18); }
+  .shadow-brand-lg { box-shadow: 0 4px 20px rgba(255,77,28,0.1), 0 16px 48px rgba(255,77,28,0.18); }
+  .glow-accent { box-shadow: 0 0 30px rgba(255,184,0,0.3); }
+
+  /* Animations — only transform and opacity */
+  @keyframes float {
+    0%, 100% { transform: translate(-50%, -50%); }
+    50% { transform: translate(-50%, calc(-50% - 8px)); }
+  }
+  @keyframes pulse-ring {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+    100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+  }
+  @keyframes pin-pop {
+    0% { transform: translate(-50%, -50%) scale(0) translateY(12px); opacity: 0; }
+    70% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+  @keyframes fade-up {
+    from { transform: translateY(28px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes slide-in {
+    from { transform: translateX(-16px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Scroll animations */
+  .animate-on-scroll { opacity: 0; transform: translateY(28px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .animate-on-scroll.visible { opacity: 1; transform: translateY(0); }
+  .animate-on-scroll.delay-1 { transition-delay: 0.1s; }
+  .animate-on-scroll.delay-2 { transition-delay: 0.2s; }
+  .animate-on-scroll.delay-3 { transition-delay: 0.3s; }
+  .animate-on-scroll.delay-4 { transition-delay: 0.4s; }
+  .animate-on-scroll.delay-5 { transition-delay: 0.5s; }
+
+  /* Mock GPS Map */
+  .mock-map {
+    background: #0f1623;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+  }
+  .map-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .map-road-h {
+    position: absolute; left: 0; right: 0; height: 2px;
+    background: rgba(255,255,255,0.12);
+  }
+  .map-road-v {
+    position: absolute; top: 0; bottom: 0; width: 2px;
+    background: rgba(255,255,255,0.12);
+  }
+  .activity-pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    animation: pin-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards, float 4s ease-in-out 0.5s infinite;
+    cursor: pointer;
+    z-index: 10;
+  }
+  .activity-pin:hover .pin-card { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+  .pin-emoji {
+    width: 36px; height: 36px;
+    background: #1A1A1A;
+    border-radius: 50% 50% 50% 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    border: 2px solid #FF4D1C;
+  }
+  .pin-card {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15,22,35,0.95);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    padding: 6px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .pin-card p { font-size: 11px; color: white; line-height: 1.4; }
+  .pin-card span { font-size: 10px; color: #FF4D1C; font-weight: 600; }
+  .user-location {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+  }
+  .user-dot {
+    width: 14px; height: 14px;
+    background: #FFB800;
+    border-radius: 50%;
+    border: 2.5px solid white;
+    position: relative; z-index: 2;
+    box-shadow: 0 0 0 4px rgba(255,184,0,0.3);
+  }
+  .user-ring {
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 2px solid #FFB800;
+    border-radius: 50%;
+    top: 0; left: 0;
+    animation: pulse-ring 2s ease-out infinite;
+  }
+  .user-ring:nth-child(2) { animation-delay: 0.7s; }
+
+  /* Phone frame */
+  .phone-frame {
+    background: #1A1A1A;
+    border-radius: 44px;
+    border: 3px solid rgba(255,255,255,0.12);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .phone-notch {
+    position: absolute; top: 12px; left: 50%;
+    transform: translateX(-50%);
+    width: 80px; height: 6px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 3px;
+    z-index: 30;
+  }
+
+  /* Button states */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px; border-radius: 50px;
+    background: #FF4D1C; color: white;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 700; font-size: 15px;
+    letter-spacing: -0.01em;
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;
+    box-shadow: 0 4px 16px rgba(255,77,28,0.18);
+    cursor: pointer; border: none;
+    text-decoration: none;
+  }
+  .btn-primary:hover { transform: translateY(-2px) scale(1.02); opacity: 0.95; }
+  .btn-primary:focus-visible { outline: 3px solid #FFB800; outline-offset: 3px; }
+  .btn-primary:active { transform: scale(0.97); }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 26px; border-radius: 50px;
+    background: transparent; color: #F5F5F5;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 600; font-size: 15px;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.35); transform: translateY(-1px); }
+  .btn-secondary:focus-visible { outline: 3px solid #FFB800; outline-offset: 3px; }
+  .btn-secondary:active { transform: scale(0.97); }
+
+  /* Feature cards */
+  .feature-card {
+    background: #1A1A1A;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 28px;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+  }
+  .feature-card:hover { transform: translateY(-6px); box-shadow: 0 8px 32px rgba(255,77,28,0.18); }
+
+  /* Sport chips */
+  .sport-chip {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 20px 16px;
+    background: #1A1A1A;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), background 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+  .sport-chip:hover { transform: translateY(-4px) scale(1.04); background: #FF4D1C18; box-shadow: 0 6px 20px rgba(255,77,28,0.1); }
+  .sport-chip:focus-visible { outline: 3px solid #FFB800; outline-offset: 2px; }
+  .sport-chip:active { transform: scale(0.96); }
+
+  /* Step connectors */
+  .step-line { background: linear-gradient(to bottom, #FF4D1C, #FFB800); }
+
+  /* Testimonial cards */
+  .testimonial-card {
+    background: #1A1A1A;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .testimonial-card::before {
+    content: '"';
+    position: absolute;
+    top: -12px; left: 20px;
+    font-size: 120px;
+    font-family: Georgia, serif;
+    color: #FF4D1C20;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .testimonial-card:hover { transform: translateY(-4px); }
+
+  /* Modal styles */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: #1A1A1A;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 520px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,77,28,0.15);
+    animation: fade-up 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .modal-input {
+    width: 100%; padding: 12px 16px;
+    background: #0F0F0F; border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 12px; color: #F5F5F5;
+    font-family: 'Sarabun', sans-serif; font-size: 15px;
+    outline: none; transition: border-color 0.2s ease;
+  }
+  .modal-input:focus { border-color: #FF4D1C; }
+  .modal-input::placeholder { color: #505050; }
+  .modal-label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: #A0A0A0; margin-bottom: 6px; letter-spacing: 0.03em;
+  }
+  .sport-checkbox { display: none; }
+  .sport-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 50px;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    background: transparent; color: #A0A0A0;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .sport-checkbox:checked + .sport-chip {
+    background: #FF4D1C; border-color: #FF4D1C; color: white;
+  }
+  .sport-chip:hover { border-color: #FF4D1C60; color: #F5F5F5; }
+
+  /* CTA gradient */
+  .cta-section {
+    background: linear-gradient(135deg, #FF4D1C 0%, #1DB954 50%, #FFB800 100%);
+    position: relative; overflow: hidden;
+  }
+
+  /* Section label */
+  .section-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px; border-radius: 50px;
+    background: #FF4D1C20; border: 1px solid #FF4D1C40;
+    color: #FF4D1C; font-size: 13px; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  /* Responsive grid overrides */
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr !important; }
+    .gps-grid { grid-template-columns: 1fr !important; }
+    .footer-grid { grid-template-columns: 1fr !important; }
+    .sports-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .feature-grid { grid-template-columns: 1fr !important; }
+    .phone-outer { display: none !important; }
+    .hero-text { text-align: center !important; }
+    .hero-btns { justify-content: center !important; }
+    .hero-stats { justify-content: center !important; }
+  }
+
+  /* Nav link states */
+  .nav-link {
+    color: #A0A0A0; font-size: 15px; font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease, opacity 0.2s ease;
+    position: relative; padding-bottom: 2px;
+  }
+  .nav-link::after {
+    content: ''; position: absolute; bottom: 0; left: 0;
+    width: 0; height: 2px; background: #FF4D1C;
+    transition: width 0.25s ease;
+  }
+  .nav-link:hover { color: #F5F5F5; }
+  .nav-link:hover::after { width: 100%; }
+  .nav-link:focus-visible { outline: 2px solid #FFB800; outline-offset: 4px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<nav style="position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:#1A1A1Acc;border-bottom:1px solid rgba(255,255,255,0.07);">
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:68px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:28px;">🏃</span>
+      <span style="font-family:'Kanit',sans-serif;font-weight:900;font-size:20px;color:#F5F5F5;letter-spacing:-0.03em;">SportMate TH</span>
+    </div>
+    <div class="hidden md:flex" style="display:flex;align-items:center;gap:32px;">
+      <a href="#features" class="nav-link">ฟีเจอร์</a>
+      <a href="#how-it-works" class="nav-link">วิธีใช้</a>
+      <a href="#gps" class="nav-link">GPS</a>
+    </div>
+    <a href="#cta" class="btn-primary" style="padding:10px 22px;font-size:14px;" onclick="openSignupModal();return false;">สมัครสมาชิก</a>
+  </div>
+</nav>
+<section id="hero" style="position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;padding-top:68px;">
+  <!-- Layered gradient bg -->
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 40%, rgba(255,77,28,0.25), transparent),radial-gradient(ellipse 60% 50% at 20% 80%, rgba(255,184,0,0.2), transparent),#0F0F0F;"></div>
+  <div class="noise-layer"></div>
+
+  <div class="hero-grid" style="max-width:1280px;margin:0 auto;padding:80px 24px;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;width:100%;position:relative;z-index:2;">
+    <!-- Left: Content -->
+    <div style="animation:fade-up 0.8s ease-out both;">
+      <div class="section-label">🌍 GPS-Powered</div>
+      <h1 style="font-size:clamp(2.8rem,5vw,4.5rem);font-weight:900;color:#F5F5F5;line-height:1.1;margin-bottom:24px;">ออกกำลังกายคนเดียวมันไม่โหด ไปด้วยกันเลย!</h1>
+      <p style="font-size:18px;color:#A0A0A0;line-height:1.8;margin-bottom:36px;max-width:480px;">SportMate TH แอปที่ช่วยให้คุณเจอเพื่อนออกกำลังกายในย่านที่คุณอยู่ได้ภายในไม่กี่นาที ไม่ว่าจะวิ่ง ปั่น หรือเตะบอล — มีเพื่อนรอคุณอยู่แล้ว</p>
+      <div class="hero-btns" style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:48px;">
+        <a href="#cta" class="btn-primary" style="font-size:16px;padding:15px 32px;" onclick="openSignupModal();return false;">สมัครสมาชิกฟรี →</a>
+        <a href="#how-it-works" class="btn-secondary">ดูวิธีใช้งาน</a>
+      </div>
+      <!-- Stats row -->
+      <div class="hero-stats" style="display:flex;align-items:center;gap:28px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.08);">
+        
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-family:'Kanit',sans-serif;font-weight:900;font-size:28px;color:#FF4D1C;letter-spacing:-0.03em;">50,000+</span>
+        <span style="font-size:13px;color:#A0A0A0;">นักกีฬาที่เข้าร่วมแล้ว</span>
+      </div>
+      <div style="width:1px;height:40px;background:rgba(255,255,255,0.1);"></div>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-family:'Kanit',sans-serif;font-weight:900;font-size:28px;color:#FF4D1C;letter-spacing:-0.03em;">120,000+</span>
+        <span style="font-size:13px;color:#A0A0A0;">กิจกรรมที่จัดขึ้นสำเร็จ</span>
+      </div>
+      <div style="width:1px;height:40px;background:rgba(255,255,255,0.1);"></div>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-family:'Kanit',sans-serif;font-weight:900;font-size:28px;color:#FF4D1C;letter-spacing:-0.03em;">30+</span>
+        <span style="font-size:13px;color:#A0A0A0;">เมืองทั่วประเทศไทย</span>
+      </div>
+      
+      </div>
+    </div>
+
+    <!-- Right: Phone mockup with GPS map -->
+    <div class="phone-outer" style="display:flex;justify-content:center;align-items:center;animation:fade-up 0.8s ease-out 0.2s both;">
+      <div style="position:relative;">
+        <!-- Floating glow blobs behind phone -->
+        <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle, rgba(255,77,28,0.25), transparent 70%);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-20px;left:-30px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle, rgba(255,184,0,0.2), transparent 70%);pointer-events:none;"></div>
+
+        <!-- Phone frame -->
+        <div class="phone-frame" style="width:280px;height:560px;">
+          <div class="phone-notch"></div>
+
+          <!-- Status bar -->
+          <div style="padding:18px 20px 8px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;color:#A0A0A0;position:relative;z-index:20;">
+            <span>09:41</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span>📶</span><span>🔋</span>
+            </div>
+          </div>
+
+          <!-- App header bar -->
+          <div style="padding:8px 16px 12px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:20;">
+            <div>
+              <p style="font-size:12px;color:#A0A0A0;">สวัสดีคุณ!</p>
+              <p style="font-size:15px;font-weight:700;color:#F5F5F5;">กิจกรรมใกล้คุณ</p>
+            </div>
+            <div style="width:36px;height:36px;border-radius:50%;background:#FF4D1C30;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+          </div>
+
+          <!-- GPS Map area -->
+          <div class="mock-map" style="height:260px;margin:0 12px;border-radius:16px;">
+            <div class="map-grid"></div>
+            <div class="map-road-h" style="top:28%;"></div>
+            <div class="map-road-h" style="top:55%;height:3px;"></div>
+            <div class="map-road-h" style="top:78%;"></div>
+            <div class="map-road-v" style="left:35%;"></div>
+            <div class="map-road-v" style="left:65%;width:3px;"></div>
+            
+      <div class="activity-pin" style="left:28%;top:38%;animation-delay:0s;animation-duration:3.5s,4s;">
+        <div class="pin-card">
+          <p>กลุ่มวิ่งเช้า</p>
+          <span>0.3 กม.</span>
+        </div>
+        <div class="pin-emoji">🏃</div>
+      </div>
+      <div class="activity-pin" style="left:68%;top:25%;animation-delay:0.15s;animation-duration:4s,4s;">
+        <div class="pin-card">
+          <p>ปั่นจักรยาน</p>
+          <span>0.7 กม.</span>
+        </div>
+        <div class="pin-emoji">🚴</div>
+      </div>
+      <div class="activity-pin" style="left:18%;top:62%;animation-delay:0.3s;animation-duration:3.8s,4s;">
+        <div class="pin-card">
+          <p>ฟุตบอล 5 คน</p>
+          <span>1.1 กม.</span>
+        </div>
+        <div class="pin-emoji">⚽</div>
+      </div>
+      <div class="activity-pin" style="left:76%;top:58%;animation-delay:0.45s;animation-duration:4.2s,4s;">
+        <div class="pin-card">
+          <p>มวยไทย</p>
+          <span>1.4 กม.</span>
+        </div>
+        <div class="pin-emoji">🥊</div>
+      </div>
+      <div class="activity-pin" style="left:50%;top:72%;animation-delay:0.6s;animation-duration:3.6s,4s;">
+        <div class="pin-card">
+          <p>แบดมินตัน</p>
+          <span>1.9 กม.</span>
+        </div>
+        <div class="pin-emoji">🏸</div>
+      </div>
+            <!-- User location -->
+            <div class="user-location" style="left:50%;top:50%;">
+              <div class="user-ring"></div>
+              <div class="user-ring" style="animation-delay:0.7s;"></div>
+              <div class="user-dot"></div>
+            </div>
+            <!-- Activity count badge -->
+            <div style="position:absolute;top:10px;right:10px;background:#FF4D1C;color:white;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;z-index:20;">5 กิจกรรม</div>
+          </div>
+
+          <!-- Bottom card -->
+          <div style="padding:14px 16px;margin:10px 12px 0;background:rgba(255,255,255,0.05);border-radius:14px;border:1px solid rgba(255,255,255,0.08);">
+            <p style="font-size:11px;color:#A0A0A0;margin-bottom:8px;">ใกล้คุณตอนนี้ 🔥</p>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:42px;height:42px;border-radius:12px;background:#FF4D1C25;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏃</div>
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:13px;font-weight:700;color:#F5F5F5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">กลุ่มวิ่งเช้า สวนลุม</p>
+                <p style="font-size:11px;color:#A0A0A0;">0.3 กม. • 4 คนกำลังรอ</p>
+              </div>
+              <div style="background:#FF4D1C;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;cursor:pointer;">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div style="position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0.5;">
+    <span style="font-size:12px;color:#A0A0A0;">เลื่อนลง</span>
+    <div style="width:1px;height:40px;background:linear-gradient(#FF4D1C,#FF4D1C00);"></div>
+  </div>
+</section>
+<section id="gps" style="padding:100px 24px;background:#0F0F0F;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(255,77,28,0.2),transparent 70%);pointer-events:none;"></div>
+  <div class="noise-layer"></div>
+
+  <div style="max-width:1280px;margin:0 auto;position:relative;z-index:2;">
+    <div style="text-align:center;margin-bottom:64px;" class="animate-on-scroll">
+      <div class="section-label">📍 GPS Real-Time</div>
+      <h2 style="font-size:clamp(2rem,4vw,3rem);font-weight:900;color:#F5F5F5;margin-bottom:16px;">เพื่อนนักกีฬาอยู่แค่รอบหัวมุม</h2>
+      <p style="font-size:17px;color:#A0A0A0;max-width:560px;margin:0 auto;line-height:1.8;">ระบบ GPS อัจฉริยะของ SportMate TH ช่วยค้นหาเพื่อนออกกำลังกายในรัศมีที่คุณกำหนดได้ตั้งแต่ 1 กม. ขึ้นไป ไม่ว่าคุณจะอยู่ที่ไหนในประเทศไทย แอปจะแสดงผู้ใช้งานที่พร้อมออกกำลังกายแบบ Real-time เพื่อให้คุณนัดเจอกันได้รวดเร็วที่สุด ไม่ต้องรอนาน เจอเพื่อน เจอพลัง ได้ทุกวัน</p>
+    </div>
+
+    <div class="gps-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;">
+      <!-- Map (left) -->
+      <div class="animate-on-scroll shadow-brand-lg" style="border-radius:20px;overflow:hidden;">
+        <div class="mock-map" style="height:380px;position:relative;">
+          <div class="map-grid"></div>
+          <div class="map-road-h" style="top:30%;"></div>
+          <div class="map-road-h" style="top:55%;height:3px;"></div>
+          <div class="map-road-h" style="top:78%;"></div>
+          <div class="map-road-v" style="left:30%;"></div>
+          <div class="map-road-v" style="left:62%;width:3px;"></div>
+          
+        <div class="activity-pin" style="left:25%;top:35%;animation-delay:0s;">
+          <div class="pin-card" style="padding:8px 12px;min-width:110px;">
+            <p style="font-weight:600;">กลุ่มวิ่งเช้า</p>
+            <p style="color:#FF4D1C;font-size:11px;">4 คน · 0.3 กม.</p>
+          </div>
+          <div class="pin-emoji" style="width:44px;height:44px;font-size:22px;">🏃</div>
+        </div>
+        <div class="activity-pin" style="left:62%;top:22%;animation-delay:0.2s;">
+          <div class="pin-card" style="padding:8px 12px;min-width:110px;">
+            <p style="font-weight:600;">ปั่นจักรยาน</p>
+            <p style="color:#FF4D1C;font-size:11px;">6 คน · 0.7 กม.</p>
+          </div>
+          <div class="pin-emoji" style="width:44px;height:44px;font-size:22px;">🚴</div>
+        </div>
+        <div class="activity-pin" style="left:15%;top:65%;animation-delay:0.4s;">
+          <div class="pin-card" style="padding:8px 12px;min-width:110px;">
+            <p style="font-weight:600;">ฟุตบอล</p>
+            <p style="color:#FF4D1C;font-size:11px;">8 คน · 1.1 กม.</p>
+          </div>
+          <div class="pin-emoji" style="width:44px;height:44px;font-size:22px;">⚽</div>
+        </div>
+        <div class="activity-pin" style="left:78%;top:60%;animation-delay:0.6s;">
+          <div class="pin-card" style="padding:8px 12px;min-width:110px;">
+            <p style="font-weight:600;">มวยไทย</p>
+            <p style="color:#FF4D1C;font-size:11px;">3 คน · 1.4 กม.</p>
+          </div>
+          <div class="pin-emoji" style="width:44px;height:44px;font-size:22px;">🥊</div>
+        </div>
+        <div class="activity-pin" style="left:48%;top:75%;animation-delay:0.8s;">
+          <div class="pin-card" style="padding:8px 12px;min-width:110px;">
+            <p style="font-weight:600;">แบดมินตัน</p>
+            <p style="color:#FF4D1C;font-size:11px;">2 คน · 1.9 กม.</p>
+          </div>
+          <div class="pin-emoji" style="width:44px;height:44px;font-size:22px;">🏸</div>
+        </div>
+          <!-- User location center -->
+          <div class="user-location" style="left:45%;top:48%;">
+            <div class="user-ring"></div>
+            <div class="user-ring" style="animation-delay:0.7s;"></div>
+            <div class="user-dot" style="width:18px;height:18px;"></div>
+          </div>
+          <!-- Top status bar -->
+          <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:30;">
+            <div id="gps-status" style="background:rgba(15,22,35,0.9);color:white;border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(8px);padding:8px 18px;border-radius:50px;font-size:13px;font-weight:600;white-space:nowrap;">
+              🔍 ค้นหากิจกรรมใกล้คุณ...
+            </div>
+          </div>
+          <!-- Range circle -->
+          <div style="position:absolute;left:45%;top:48%;transform:translate(-50%,-50%);width:160px;height:160px;border-radius:50%;border:1.5px dashed #FF4D1C40;pointer-events:none;"></div>
+          <div style="position:absolute;left:45%;top:48%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;border:1px dashed #FF4D1C25;pointer-events:none;"></div>
+        </div>
+      </div>
+
+      <!-- Feature list (right) -->
+      <div style="display:flex;flex-direction:column;gap:24px;">
+        
+        <div class="animate-on-scroll delay-1" style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:#1A1A1A;border-radius:16px;border:1px solid rgba(255,255,255,0.07);">
+          <div style="width:48px;height:48px;border-radius:14px;background:#FF4D1C22;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">📍</div>
+          <div>
+            <h3 style="font-size:16px;font-weight:700;color:#F5F5F5;margin-bottom:4px;">GPS หาเพื่อนใกล้คุณ</h3>
+            <p style="font-size:14px;color:#A0A0A0;line-height:1.7;">ค้นหาเพื่อนออกกำลังกายที่อยู่ในละแวกเดียวกันได้แบบ Real-time ไม่ต้องเดินทางไกล เจอกันง่ายๆ แค่ไม่กี่กิโล</p>
+          </div>
+        </div>
+        <div class="animate-on-scroll delay-2" style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:#1A1A1A;border-radius:16px;border:1px solid rgba(255,255,255,0.07);">
+          <div style="width:48px;height:48px;border-radius:14px;background:#FF4D1C22;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🎯</div>
+          <div>
+            <h3 style="font-size:16px;font-weight:700;color:#F5F5F5;margin-bottom:4px;">แมทช์กีฬาที่ใช่</h3>
+            <p style="font-size:14px;color:#A0A0A0;line-height:1.7;">ระบบ Smart Matching จับคู่คุณกับเพื่อนที่เล่นกีฬาเดียวกัน มีระดับฝีมือใกล้เคียงกัน เพื่อประสบการณ์ที่สนุกและท้าทายที่สุด</p>
+          </div>
+        </div>
+        <div class="animate-on-scroll delay-3" style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:#1A1A1A;border-radius:16px;border:1px solid rgba(255,255,255,0.07);">
+          <div style="width:48px;height:48px;border-radius:14px;background:#FF4D1C22;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">👥</div>
+          <div>
+            <h3 style="font-size:16px;font-weight:700;color:#F5F5F5;margin-bottom:4px;">ชุมชนนักกีฬาไทย</h3>
+            <p style="font-size:14px;color:#A0A0A0;line-height:1.7;">เข้าร่วมกลุ่มกีฬาที่คุณชอบ แชร์เป้าหมาย สร้างแรงบันดาลใจ และเติบโตไปพร้อมกับคอมมูนิตี้ที่แอคทีฟที่สุดในไทย</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="features" style="padding:100px 24px;background:#1A1A1A;position:relative;overflow:hidden;">
+  <div style="position:absolute;bottom:0;right:0;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(29,185,84,0.15),transparent 70%);pointer-events:none;"></div>
+  <div class="noise-layer"></div>
+
+  <div style="max-width:1280px;margin:0 auto;position:relative;z-index:2;">
+    <div style="text-align:center;margin-bottom:64px;" class="animate-on-scroll">
+      <div class="section-label">✨ ฟีเจอร์เด่น</div>
+      <h2 style="font-size:clamp(2rem,4vw,3rem);font-weight:900;color:#F5F5F5;margin-bottom:16px;">ทุกอย่างที่คุณต้องการ<br>อยู่ในแอปเดียว</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+      
+      <div class="feature-card animate-on-scroll delay-1">
+        <div style="width:56px;height:56px;border-radius:16px;background:#FF4D1C20;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px;">📍</div>
+        <h3 style="font-size:18px;font-weight:700;color:#F5F5F5;margin-bottom:10px;">GPS หาเพื่อนใกล้คุณ</h3>
+        <p style="font-size:14px;color:#A0A0A0;line-height:1.8;">ค้นหาเพื่อนออกกำลังกายที่อยู่ในละแวกเดียวกันได้แบบ Real-time ไม่ต้องเดินทางไกล เจอกันง่ายๆ แค่ไม่กี่กิโล</p>
+      </div>
+      <div class="feature-card animate-on-scroll delay-2">
+        <div style="width:56px;height:56px;border-radius:16px;background:#FF4D1C20;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px;">🎯</div>
+        <h3 style="font-size:18px;font-weight:700;color:#F5F5F5;margin-bottom:10px;">แมทช์กีฬาที่ใช่</h3>
+        <p style="font-size:14px;color:#A0A0A0;line-height:1.8;">ระบบ Smart Matching จับคู่คุณกับเพื่อนที่เล่นกีฬาเดียวกัน มีระดับฝีมือใกล้เคียงกัน เพื่อประสบการณ์ที่สนุกและท้าทายที่สุด</p>
+      </div>
+      <div class="feature-card animate-on-scroll delay-3">
+        <div style="width:56px;height:56px;border-radius:16px;background:#FF4D1C20;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px;">👥</div>
+        <h3 style="font-size:18px;font-weight:700;color:#F5F5F5;margin-bottom:10px;">ชุมชนนักกีฬาไทย</h3>
+        <p style="font-size:14px;color:#A0A0A0;line-height:1.8;">เข้าร่วมกลุ่มกีฬาที่คุณชอบ แชร์เป้าหมาย สร้างแรงบันดาลใจ และเติบโตไปพร้อมกับคอมมูนิตี้ที่แอคทีฟที่สุดในไทย</p>
+      </div>
+      <div class="feature-card animate-on-scroll delay-4">
+        <div style="width:56px;height:56px;border-radius:16px;background:#FF4D1C20;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px;">💬</div>
+        <h3 style="font-size:18px;font-weight:700;color:#F5F5F5;margin-bottom:10px;">แชทนัดซ้อมได้เลย</h3>
+        <p style="font-size:14px;color:#A0A0A0;line-height:1.8;">ระบบแชทในแอปที่ใช้งานง่าย นัดเวลา นัดสถานที่ หรือส่งแผนที่ปักหมุดได้ในคลิกเดียว ไม่ต้องยุ่งยากกับแอปอื่น</p>
+      </div>
+      <div class="feature-card animate-on-scroll delay-5">
+        <div style="width:56px;height:56px;border-radius:16px;background:#FF4D1C20;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px;">🏆</div>
+        <h3 style="font-size:18px;font-weight:700;color:#F5F5F5;margin-bottom:10px;">กิจกรรมและอีเวนต์</h3>
+        <p style="font-size:14px;color:#A0A0A0;line-height:1.8;">อัปเดตกิจกรรมกีฬาในเมืองของคุณตลอด 24 ชม. ตั้งแต่ Morning Run ยันทัวร์นาเมนต์สุดมันส์ สมัครได้เลยไม่ต้องรอ</p>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="sports" style="padding:80px 24px;background:#0F0F0F;">
+  <div style="max-width:1280px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:48px;" class="animate-on-scroll">
+      <div class="section-label">🎯 กีฬาที่รองรับ</div>
+      <h2 style="font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;color:#F5F5F5;margin-bottom:12px;">ไม่ว่าจะชอบกีฬาอะไร<br>เราช่วยหาเพื่อนให้คุณได้</h2>
+    </div>
+    <div class="sports-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+      
+      <div class="sport-chip animate-on-scroll delay-1" tabindex="0">
+        <span style="font-size:36px;">🏃</span>
+        <span style="font-size:14px;font-weight:600;color:#F5F5F5;">วิ่ง</span>
+      </div>
+      <div class="sport-chip animate-on-scroll delay-2" tabindex="0">
+        <span style="font-size:36px;">🚴</span>
+        <span style="font-size:14px;font-weight:600;color:#F5F5F5;">ปั่นจักรยาน</span>
+      </div>
+      <div class="sport-chip animate-on-scroll delay-3" tabindex="0">
+        <span style="font-size:36px;">⚽</span>
+        <span style="font-size:14px;font-weight:600;color:#F5F5F5;">ฟุตบอล</span>
+      </div>
+      <div class="sport-chip animate-on-scroll delay-4" tabindex="0">
+        <span style="font-size:36px;">🏸</span>
+        <span style="font-size:14px;font-weight:600;color:#F5F5F5;">แบดมินตัน</span>
+      </div>
+      <div class="sport-chip animate-on-scroll delay-5" tabindex="0">
+        <span style="font-size:36px;">🥊</span>
+        <span style="font-size:14px;font-weight:600;color:#F5F5F5;">มวยไทย</span>
+      </div>
+      <div class="sport-chip animate-on-scroll delay-5" tabindex="0">
+        <span style="font-size:36px;">🏋️</span>
+        <span style="font-size:14px;font-weight:600;color:#F5F5F5;">ยิม</span>
+      </div>
+      <div class="sport-chip animate-on-scroll delay-5" tabindex="0">
+        <span style="font-size:36px;">🧘</span>
+        <span style="font-size:14px;font-weight:600;color:#F5F5F5;">โยคะ</span>
+      </div>
+      <div class="sport-chip animate-on-scroll delay-5" tabindex="0">
+        <span style="font-size:36px;">🥾</span>
+        <span style="font-size:14px;font-weight:600;color:#F5F5F5;">เดินป่า</span>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="how-it-works" style="padding:100px 24px;background:#1A1A1A;">
+  <div style="max-width:900px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:64px;" class="animate-on-scroll">
+      <div class="section-label">🗺️ วิธีใช้งาน</div>
+      <h2 style="font-size:clamp(2rem,4vw,3rem);font-weight:900;color:#F5F5F5;margin-bottom:16px;">เริ่มต้นง่ายๆ<br>ใน 3 ขั้นตอน</h2>
+    </div>
+    <div style="max-width:500px;margin:0 auto;">
+      
+      <div class="animate-on-scroll delay-1">
+        <div style="display:flex;gap:20px;align-items:flex-start;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;">
+            <div style="width:56px;height:56px;border-radius:50%;background:#FF4D1C;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(255,77,28,0.35);">📱</div>
+          </div>
+          <div style="flex:1;padding-bottom:32px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <span style="font-size:12px;font-weight:700;color:#FF4D1C;text-transform:uppercase;letter-spacing:0.08em;">ขั้นตอนที่ 1</span>
+            </div>
+            <h3 style="font-size:20px;font-weight:800;color:#F5F5F5;margin-bottom:8px;">สมัครง่าย ใช้เวลาไม่ถึง 1 นาที</h3>
+            <p style="font-size:15px;color:#A0A0A0;line-height:1.8;">สร้างโปรไฟล์นักกีฬาของคุณด้วย Facebook, Google หรืออีเมล แล้วบอกเราว่าคุณชอบออกกำลังกายแบบไหน</p>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;align-items:center;padding:4px 0;">
+              <div class="step-line" style="width:3px;height:48px;border-radius:2px;opacity:0.5;"></div>
+            </div>
+      </div>
+      <div class="animate-on-scroll delay-2">
+        <div style="display:flex;gap:20px;align-items:flex-start;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;">
+            <div style="width:56px;height:56px;border-radius:50%;background:#FF4D1C;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(255,77,28,0.35);">🎯</div>
+          </div>
+          <div style="flex:1;padding-bottom:32px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <span style="font-size:12px;font-weight:700;color:#FF4D1C;text-transform:uppercase;letter-spacing:0.08em;">ขั้นตอนที่ 2</span>
+            </div>
+            <h3 style="font-size:20px;font-weight:800;color:#F5F5F5;margin-bottom:8px;">เลือกกีฬาที่คุณรัก</h3>
+            <p style="font-size:15px;color:#A0A0A0;line-height:1.8;">เลือกกีฬาที่ชอบ ตั้งระดับฝีมือ และบอกเวลาว่างของคุณ เพื่อให้ระบบแมทช์เพื่อนที่เหมาะสมที่สุดให้คุณ</p>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;align-items:center;padding:4px 0;">
+              <div class="step-line" style="width:3px;height:48px;border-radius:2px;opacity:0.5;"></div>
+            </div>
+      </div>
+      <div class="animate-on-scroll delay-3">
+        <div style="display:flex;gap:20px;align-items:flex-start;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;">
+            <div style="width:56px;height:56px;border-radius:50%;background:#FF4D1C;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(255,77,28,0.35);">🏅</div>
+          </div>
+          <div style="flex:1;padding-bottom:32px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <span style="font-size:12px;font-weight:700;color:#FF4D1C;text-transform:uppercase;letter-spacing:0.08em;">ขั้นตอนที่ 3</span>
+            </div>
+            <h3 style="font-size:20px;font-weight:800;color:#F5F5F5;margin-bottom:8px;">เจอเพื่อน แล้วออกไปสู้เลย!</h3>
+            <p style="font-size:15px;color:#A0A0A0;line-height:1.8;">เลือกเพื่อนที่ใช่ แชทนัดเวลา แล้วไปออกกำลังกายด้วยกัน — ง่ายแค่นี้เอง</p>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</section>
+<section id="testimonials" style="padding:100px 24px;background:#0F0F0F;">
+  <div style="max-width:1280px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:64px;" class="animate-on-scroll">
+      <div class="section-label">💬 รีวิวจากผู้ใช้จริง</div>
+      <h2 style="font-size:clamp(2rem,4vw,3rem);font-weight:900;color:#F5F5F5;margin-bottom:16px;">คนที่ใช้แล้วพูดว่าอะไร</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
+      
+      <div class="testimonial-card animate-on-scroll delay-1">
+        <div style="position:relative;z-index:1;">
+          <p style="font-size:16px;color:#F5F5F5;line-height:1.8;margin-bottom:24px;">"ก่อนหน้านี้วิ่งคนเดียวแล้วเบื่อมาก พอมาใช้ SportMate TH เจอกลุ่มนักวิ่งในหมู่บ้านเลยซะงั้น ตอนนี้วิ่งด้วยกันทุกเช้าเลยครับ ฟอร์มดีขึ้นด้วย!"</p>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:44px;height:44px;border-radius:50%;background:#FF4D1C;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;flex-shrink:0;">ต</div>
+            <div>
+              <p style="font-size:14px;font-weight:700;color:#F5F5F5;">ต้น ภัทรพล อายุ 27</p>
+              <p style="font-size:13px;color:#A0A0A0;">นักกีฬาวิ่ง · ลาดพร้าว</p>
+            </div>
+            <div style="margin-left:auto;">
+              <span style="font-size:14px;color:#FF4D1C;">★★★★★</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card animate-on-scroll delay-2">
+        <div style="position:relative;z-index:1;">
+          <p style="font-size:16px;color:#F5F5F5;line-height:1.8;margin-bottom:24px;">"ย้ายมาอยู่กรุงเทพใหม่ๆ ไม่รู้จักใครเลย แต่พอดาวน์โหลด SportMate TH ได้เจอกลุ่มโยคะใกล้บ้านทันที ตอนนี้มีเพื่อนใหม่และสุขภาพดีขึ้นมากค่ะ ขอบคุณแอปนี้จริงๆ"</p>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:44px;height:44px;border-radius:50%;background:#FFB800;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;flex-shrink:0;">แ</div>
+            <div>
+              <p style="font-size:14px;font-weight:700;color:#F5F5F5;">แนน สิริลักษณ์ อายุ 23</p>
+              <p style="font-size:13px;color:#A0A0A0;">นักกีฬาโยคะ · อ่อนนุช</p>
+            </div>
+            <div style="margin-left:auto;">
+              <span style="font-size:14px;color:#FF4D1C;">★★★★★</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card animate-on-scroll delay-3">
+        <div style="position:relative;z-index:1;">
+          <p style="font-size:16px;color:#F5F5F5;line-height:1.8;margin-bottom:24px;">"หาคนมาลงฟุตบอลครบทีมทีไรก็ปวดหัวทุกที แต่ SportMate TH ช่วยได้หมด ตอนนี้มีคนสำรองรออยู่ตลอด ทุกอาทิตย์ไม่เคยขาดเลยสักครั้ง"</p>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:44px;height:44px;border-radius:50%;background:#1DB954;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;flex-shrink:0;">เ</div>
+            <div>
+              <p style="font-size:14px;font-weight:700;color:#F5F5F5;">เอก ณัฐวุฒิ อายุ 31</p>
+              <p style="font-size:13px;color:#A0A0A0;">นักกีฬาฟุตบอล · รามคำแหง</p>
+            </div>
+            <div style="margin-left:auto;">
+              <span style="font-size:14px;color:#FF4D1C;">★★★★★</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="cta" style="padding:100px 24px;position:relative;overflow:hidden;" class="cta-section">
+  <div class="noise-layer"></div>
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(255,184,0,0.4),transparent 70%);pointer-events:none;"></div>
+
+  <div style="max-width:700px;margin:0 auto;text-align:center;position:relative;z-index:2;" class="animate-on-scroll">
+    <h2 style="font-size:clamp(2.2rem,5vw,3.5rem);font-weight:900;color:white;line-height:1.1;margin-bottom:20px;">พร้อมหยุดออกกำลังกายคนเดียวแล้วหรือยัง?</h2>
+    <p style="font-size:18px;color:rgba(255,255,255,0.8);line-height:1.8;margin-bottom:40px;">เข้าร่วมกับนักกีฬากว่า 50,000 คนที่กำลังรอเพื่อนอย่างคุณอยู่ สมัครสมาชิกฟรี เริ่มหาเพื่อนออกกำลังกายได้เลยวันนี้</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="#" style="display:inline-flex;align-items:center;gap:10px;padding:16px 36px;background:white;color:#FF4D1C;border-radius:50px;font-family:'Kanit',sans-serif;font-weight:800;font-size:16px;text-decoration:none;box-shadow:0 8px 32px rgba(0,0,0,0.2);transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s;"
+         onclick="openSignupModal();return false;"
+         onmouseover="this.style.transform='translateY(-3px) scale(1.03)'" onmouseout="this.style.transform=''"
+         onfocus="this.style.outline='3px solid white'" onblur="this.style.outline='none'"
+         onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='translateY(-3px)'">
+        📝 สมัครสมาชิกฟรี
+      </a>
+    </div>
+  </div>
+</section>
+<footer style="background:#1A1A1A;border-top:1px solid rgba(255,255,255,0.06);padding:60px 24px 32px;">
+  <div style="max-width:1280px;margin:0 auto;">
+    <div class="footer-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:48px;margin-bottom:48px;">
+      <!-- Brand -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:28px;">🏃</span>
+          <div>
+            <span style="font-family:'Kanit',sans-serif;font-weight:900;font-size:20px;color:#F5F5F5;">SportMate TH</span>
+            <p style="font-size:12px;color:#A0A0A0;">สปอร์ตเมท — หาเพื่อนออกกำลังกาย</p>
+          </div>
+        </div>
+        <p style="font-size:14px;color:#A0A0A0;line-height:1.8;max-width:280px;">เจอเพื่อน เจอพลัง ไปด้วยกัน — SportMate TH</p>
+      </div>
+      <!-- Links -->
+      <div>
+        <h4 style="font-size:14px;font-weight:700;color:#F5F5F5;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.06em;">เกี่ยวกับ</h4>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href='#' style='color:#A0A0A0;font-size:14px;text-decoration:none;transition:color 0.2s;' onmouseover="this.style.color='#F5F5F5'" onmouseout="this.style.color='#A0A0A0'">เกี่ยวกับเรา</a><a href='#' style='color:#A0A0A0;font-size:14px;text-decoration:none;transition:color 0.2s;' onmouseover="this.style.color='#F5F5F5'" onmouseout="this.style.color='#A0A0A0'">นโยบายความเป็นส่วนตัว</a><a href='#' style='color:#A0A0A0;font-size:14px;text-decoration:none;transition:color 0.2s;' onmouseover="this.style.color='#F5F5F5'" onmouseout="this.style.color='#A0A0A0'">เงื่อนไขการใช้งาน</a><a href='#' style='color:#A0A0A0;font-size:14px;text-decoration:none;transition:color 0.2s;' onmouseover="this.style.color='#F5F5F5'" onmouseout="this.style.color='#A0A0A0'">ติดต่อเรา</a>
+        </div>
+      </div>
+      <!-- Social -->
+      <div>
+        <h4 style="font-size:14px;font-weight:700;color:#F5F5F5;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.06em;">ติดตามเรา</h4>
+        <div style="display:flex;gap:12px;">
+          <a href='#' style='width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;transition:transform 0.2s,background 0.2s;' onmouseover="this.style.transform='translateY(-3px)';this.style.background='#FF4D1C25'" onmouseout="this.style.transform='';this.style.background='rgba(255,255,255,0.06)'">📘</a><a href='#' style='width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;transition:transform 0.2s,background 0.2s;' onmouseover="this.style.transform='translateY(-3px)';this.style.background='#FF4D1C25'" onmouseout="this.style.transform='';this.style.background='rgba(255,255,255,0.06)'">📸</a><a href='#' style='width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;transition:transform 0.2s,background 0.2s;' onmouseover="this.style.transform='translateY(-3px)';this.style.background='#FF4D1C25'" onmouseout="this.style.transform='';this.style.background='rgba(255,255,255,0.06)'">🎵</a><a href='#' style='width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;transition:transform 0.2s,background 0.2s;' onmouseover="this.style.transform='translateY(-3px)';this.style.background='#FF4D1C25'" onmouseout="this.style.transform='';this.style.background='rgba(255,255,255,0.06)'">🐦</a>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <p style="font-size:13px;color:#A0A0A0;">© 2025 SportMate TH. สงวนลิขสิทธิ์ทุกประการ</p>
+      <p style="font-size:13px;color:#A0A0A0;display:flex;align-items:center;gap:6px;">ออกแบบด้วย <span style="color:#e25555;">♥</span> โดย AI Agents</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Signup Modal -->
+<div id="signup-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="signup-title">
+  <div class="modal-card">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="font-size:28px;">🏃</span>
+          <h2 id="signup-title" style="font-family:'Kanit',sans-serif;font-weight:900;font-size:22px;color:#F5F5F5;letter-spacing:-0.03em;">สมัครสมาชิก SportMate TH</h2>
+        </div>
+        <p style="font-size:14px;color:#A0A0A0;">ฟรี! เริ่มหาเพื่อนออกกำลังกายได้เลย</p>
+      </div>
+      <button onclick="closeSignupModal()" aria-label="ปิด"
+        style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#A0A0A0;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s,color 0.2s;"
+        onmouseover="this.style.background='rgba(255,77,28,0.15)';this.style.color='#FF4D1C'"
+        onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='#A0A0A0'">✕</button>
+    </div>
+
+    <!-- Form wrap -->
+    <div id="signup-form-wrap">
+      <form id="signup-form" novalidate>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- ชื่อ-นามสกุล -->
+          <div>
+            <label class="modal-label" for="s-fullname">ชื่อ-นามสกุล <span style="color:#FF4D1C;">*</span></label>
+            <input id="s-fullname" class="modal-input" type="text" placeholder="เช่น ณัฐวุฒิ สมใจ" required>
+            <span id="err-fullname" style="display:none;font-size:12px;color:#FF4D1C;margin-top:4px;"></span>
+          </div>
+
+          <!-- ชื่อที่แสดง -->
+          <div>
+            <label class="modal-label" for="s-username">ชื่อที่แสดง (Username) <span style="color:#FF4D1C;">*</span></label>
+            <input id="s-username" class="modal-input" type="text" placeholder="เช่น SportKing99" required>
+            <span id="err-username" style="display:none;font-size:12px;color:#FF4D1C;margin-top:4px;"></span>
+          </div>
+
+          <!-- อีเมล -->
+          <div>
+            <label class="modal-label" for="s-email">อีเมล <span style="color:#FF4D1C;">*</span></label>
+            <input id="s-email" class="modal-input" type="email" placeholder="your@email.com" required>
+            <span id="err-email" style="display:none;font-size:12px;color:#FF4D1C;margin-top:4px;"></span>
+          </div>
+
+          <!-- เบอร์โทรศัพท์ -->
+          <div>
+            <label class="modal-label" for="s-phone">เบอร์โทรศัพท์</label>
+            <input id="s-phone" class="modal-input" type="tel" placeholder="08x-xxx-xxxx">
+            <span id="err-phone" style="display:none;font-size:12px;color:#FF4D1C;margin-top:4px;"></span>
+          </div>
+
+          <!-- รหัสผ่าน -->
+          <div>
+            <label class="modal-label" for="s-password">รหัสผ่าน <span style="color:#FF4D1C;">*</span></label>
+            <div style="position:relative;">
+              <input id="s-password" class="modal-input" type="password" placeholder="อย่างน้อย 8 ตัว มีตัวเลข 1 ตัว" required style="padding-right:44px;">
+              <button type="button" id="toggle-pw" onclick="togglePw('s-password','toggle-pw')"
+                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#A0A0A0;cursor:pointer;font-size:16px;padding:4px;">👁</button>
+            </div>
+            <span id="err-password" style="display:none;font-size:12px;color:#FF4D1C;margin-top:4px;"></span>
+          </div>
+
+          <!-- ยืนยันรหัสผ่าน -->
+          <div>
+            <label class="modal-label" for="s-confirm-password">ยืนยันรหัสผ่าน <span style="color:#FF4D1C;">*</span></label>
+            <div style="position:relative;">
+              <input id="s-confirm-password" class="modal-input" type="password" placeholder="กรอกรหัสผ่านอีกครั้ง" required style="padding-right:44px;">
+              <button type="button" id="toggle-cpw" onclick="togglePw('s-confirm-password','toggle-cpw')"
+                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#A0A0A0;cursor:pointer;font-size:16px;padding:4px;">👁</button>
+            </div>
+            <span id="err-confirm-password" style="display:none;font-size:12px;color:#FF4D1C;margin-top:4px;"></span>
+          </div>
+
+          <!-- กีฬาที่ชอบ -->
+          <div>
+            <label class="modal-label">กีฬาที่ชอบ (เลือกได้หลายอย่าง)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;">
+              <label><input type="checkbox" class="sport-checkbox" name="sport" value="วิ่ง"><span class="sport-chip">🏃 วิ่ง</span></label>
+              <label><input type="checkbox" class="sport-checkbox" name="sport" value="ฟุตบอล"><span class="sport-chip">⚽ ฟุตบอล</span></label>
+              <label><input type="checkbox" class="sport-checkbox" name="sport" value="โยคะ"><span class="sport-chip">🧘 โยคะ</span></label>
+              <label><input type="checkbox" class="sport-checkbox" name="sport" value="มวยไทย"><span class="sport-chip">🥊 มวยไทย</span></label>
+              <label><input type="checkbox" class="sport-checkbox" name="sport" value="แบดมินตัน"><span class="sport-chip">🏸 แบดมินตัน</span></label>
+              <label><input type="checkbox" class="sport-checkbox" name="sport" value="ว่ายน้ำ"><span class="sport-chip">🏊 ว่ายน้ำ</span></label>
+              <label><input type="checkbox" class="sport-checkbox" name="sport" value="ปั่นจักรยาน"><span class="sport-chip">🚴 ปั่นจักรยาน</span></label>
+              <label><input type="checkbox" class="sport-checkbox" name="sport" value="อื่นๆ"><span class="sport-chip">➕ อื่นๆ</span></label>
+            </div>
+          </div>
+
+          <!-- Global error -->
+          <div id="signup-global-error" style="display:none;background:rgba(255,77,28,0.1);border:1px solid rgba(255,77,28,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#FF4D1C;"></div>
+
+          <!-- Submit -->
+          <button type="submit" id="signup-submit-btn" class="btn-primary"
+            style="width:100%;padding:14px;font-size:16px;border:none;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span id="signup-btn-text">สมัครสมาชิกฟรี →</span>
+            <span id="signup-btn-spinner" style="display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
+          </button>
+
+          <p style="font-size:12px;color:#505050;text-align:center;">ข้อมูลของคุณจะถูกเก็บอย่างปลอดภัย ไม่มีการเผยแพร่</p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Success state -->
+    <div id="signup-success" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 0;text-align:center;gap:16px;">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#FF4D1C,#FFB800);display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 0 40px rgba(255,77,28,0.4);">✓</div>
+      <h3 style="font-family:'Kanit',sans-serif;font-weight:900;font-size:22px;color:#F5F5F5;">ยินดีต้อนรับสู่ SportMate TH!</h3>
+      <p style="font-size:15px;color:#A0A0A0;line-height:1.7;max-width:360px;">สมัครสำเร็จ! ตรวจสอบอีเมลของคุณเพื่อยืนยันบัญชี</p>
+      <a href="login.html?registered=1" class="btn-primary" style="padding:12px 32px;font-size:15px;text-decoration:none;display:inline-block;margin-top:8px;">
+        เข้าสู่ระบบเลย →
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ← ใส่ URL ที่ได้จากการ Deploy Google Apps Script ตรงนี้
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2ByyVNuhwblvpPQf-Rxryr4POeV-MXpxO_NPxUv-SeULIk1shuc2gsbrxCpl-pi_rgA/exec';
+
+  // Signup modal
+  function openSignupModal() {
+    document.getElementById('signup-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSignupModal() {
+    document.getElementById('signup-modal').classList.remove('open');
+    document.body.style.overflow = '';
+    document.getElementById('signup-success').style.display = 'none';
+    document.getElementById('signup-form-wrap').style.display = 'block';
+    document.getElementById('signup-form').reset();
+    clearErrors();
+  }
+
+  function togglePw(inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁';
+    }
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById('err-' + id);
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+    const input = document.getElementById('s-' + id);
+    if (input) input.style.borderColor = msg ? 'rgba(255,77,28,0.7)' : '';
+  }
+
+  function clearErrors() {
+    ['fullname','username','email','phone','password','confirm-password'].forEach(function(id) {
+      showError(id, '');
+    });
+    const ge = document.getElementById('signup-global-error');
+    if (ge) ge.style.display = 'none';
+  }
+
+  function validateForm() {
+    let valid = true;
+
+    const fullname = document.getElementById('s-fullname').value.trim();
+    if (!fullname) {
+      showError('fullname', 'กรุณากรอกชื่อ-นามสกุล'); valid = false;
+    } else if (fullname.split(' ').filter(Boolean).length < 2) {
+      showError('fullname', 'กรุณากรอกทั้งชื่อและนามสกุล (คั่นด้วยช่องว่าง)'); valid = false;
+    } else {
+      showError('fullname', '');
+    }
+
+    const username = document.getElementById('s-username').value.trim();
+    if (!username) {
+      showError('username', 'กรุณากรอก Username'); valid = false;
+    } else if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      showError('username', 'Username ต้องยาว 3-20 ตัว ใช้ได้เฉพาะ a-z, A-Z, 0-9, _'); valid = false;
+    } else {
+      showError('username', '');
+    }
+
+    const email = document.getElementById('s-email').value.trim();
+    if (!email) {
+      showError('email', 'กรุณากรอกอีเมล'); valid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError('email', 'รูปแบบอีเมลไม่ถูกต้อง'); valid = false;
+    } else {
+      showError('email', '');
+    }
+
+    const phone = document.getElementById('s-phone').value.trim();
+    if (phone && !/^0[0-9]{8,9}$/.test(phone.replace(/[-\s]/g, ''))) {
+      showError('phone', 'รูปแบบเบอร์โทรไม่ถูกต้อง เช่น 0812345678'); valid = false;
+    } else {
+      showError('phone', '');
+    }
+
+    const pw = document.getElementById('s-password').value;
+    if (!pw) {
+      showError('password', 'กรุณากรอกรหัสผ่าน'); valid = false;
+    } else if (pw.length < 8) {
+      showError('password', 'รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร'); valid = false;
+    } else if (!/\d/.test(pw)) {
+      showError('password', 'รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว'); valid = false;
+    } else {
+      showError('password', '');
+    }
+
+    const cpw = document.getElementById('s-confirm-password').value;
+    if (!cpw) {
+      showError('confirm-password', 'กรุณายืนยันรหัสผ่าน'); valid = false;
+    } else if (pw !== cpw) {
+      showError('confirm-password', 'รหัสผ่านไม่ตรงกัน'); valid = false;
+    } else {
+      showError('confirm-password', '');
+    }
+
+    return valid;
+  }
+
+  async function hashPassword(password) {
+    const msgBuffer = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    return Array.from(new Uint8Array(hashBuffer)).map(function(b) {
+      return b.toString(16).padStart(2, '0');
+    }).join('');
+  }
+
+  function setSubmitLoading(loading) {
+    document.getElementById('signup-btn-text').style.display = loading ? 'none' : 'inline';
+    document.getElementById('signup-btn-spinner').style.display = loading ? 'inline-block' : 'none';
+    document.getElementById('signup-submit-btn').disabled = loading;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('signup-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearErrors();
+      if (!validateForm()) return;
+
+      setSubmitLoading(true);
+
+      const sports = Array.from(document.querySelectorAll('.sport-checkbox:checked')).map(function(cb) { return cb.value; });
+      const password_hash = await hashPassword(document.getElementById('s-password').value);
+
+      const payload = {
+        action: 'signup',
+        fullname: document.getElementById('s-fullname').value.trim(),
+        username: document.getElementById('s-username').value.trim(),
+        email: document.getElementById('s-email').value.trim(),
+        phone: document.getElementById('s-phone').value.trim(),
+        sports: sports,
+        password_hash: password_hash
+      };
+
+      // ถ้ายังไม่ได้ตั้ง URL ให้แสดง success ทันที (demo mode)
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
+        setSubmitLoading(false);
+        document.getElementById('signup-form-wrap').style.display = 'none';
+        document.getElementById('signup-success').style.display = 'flex';
+        return;
+      }
+
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('signup-form-wrap').style.display = 'none';
+          document.getElementById('signup-success').style.display = 'flex';
+        } else {
+          const ge = document.getElementById('signup-global-error');
+          ge.textContent = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+          ge.style.display = 'block';
+        }
+      } catch (err) {
+        const ge = document.getElementById('signup-global-error');
+        ge.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่';
+        ge.style.display = 'block';
+      } finally {
+        setSubmitLoading(false);
+      }
+    });
+
+    document.getElementById('signup-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeSignupModal();
+    });
+  });
+
+  // Geolocation
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        const el = document.getElementById('gps-status');
+        if (el) {
+          el.textContent = '✓ พบกิจกรรม 5 รายการในรัศมี 2 กม.';
+          el.style.borderColor = 'rgba(74,222,128,0.4)';
+          el.style.color = '#4ade80';
+        }
+      },
+      function(err) {
+        const el = document.getElementById('gps-status');
+        if (el) {
+          el.textContent = '📍 เปิด GPS เพื่อดูกิจกรรมจริงในพื้นที่คุณ';
+        }
+      }
+    );
+  }
+
+  // Scroll animations with IntersectionObserver
+  const observer = new IntersectionObserver(
+    function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    },
+    { threshold: 0.05 }
+  );
+  document.querySelectorAll('.animate-on-scroll').forEach(function(el) {
+    observer.observe(el);
+  });
+  // Fallback: force-reveal all elements after 1.2s for static renders/screenshots
+  setTimeout(function() {
+    document.querySelectorAll('.animate-on-scroll').forEach(function(el) {
+      el.classList.add('visible');
+    });
+  }, 1200);
+</script>
+</body>
+</html>

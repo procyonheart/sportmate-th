@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เข้าสู่ระบบ — SportMate TH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700;900&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #0D0D0D;
+      color: #F5F5F5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fade-up {
+      from { transform: translateY(24px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .noise-layer {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+
+    .login-card {
+      background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 24px 64px rgba(0,0,0,0.5);
+      animation: fade-up 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    .field-label {
+      display: block;
+      font-family: 'Kanit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #C0C0C0;
+      margin-bottom: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    .field-input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-family: 'Sarabun', sans-serif;
+      font-size: 15px;
+      color: #F5F5F5;
+      outline: none;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .field-input::placeholder { color: #505050; }
+    .field-input:focus {
+      border-color: rgba(255,77,28,0.6);
+      background: rgba(255,77,28,0.04);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #FF4D1C, #FF6B3D);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Kanit', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(255,77,28,0.35), 0 1px 4px rgba(255,77,28,0.2);
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;
+    }
+    .btn-login:hover { transform: translateY(-2px) scale(1.02); opacity: 0.95; }
+    .btn-login:active { transform: scale(0.97); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .error-box {
+      display: none;
+      background: rgba(255,77,28,0.1);
+      border: 1px solid rgba(255,77,28,0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #FF4D1C;
+    }
+
+    .toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: linear-gradient(135deg, #1DB954, #17a348);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-family: 'Kanit', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: 0 4px 20px rgba(29,185,84,0.4);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 100;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="noise-layer"></div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast">✓ สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลของคุณ</div>
+
+  <!-- Gradient blobs -->
+  <div style="position:fixed;top:-200px;left:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(255,77,28,0.12),transparent 70%);pointer-events:none;z-index:0;"></div>
+  <div style="position:fixed;bottom:-200px;right:-200px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(29,185,84,0.08),transparent 70%);pointer-events:none;z-index:0;"></div>
+
+  <main style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1;">
+
+    <!-- Logo -->
+    <a href="index.html" style="display:flex;align-items:center;gap:10px;margin-bottom:36px;text-decoration:none;">
+      <span style="font-size:36px;">🏃</span>
+      <div>
+        <div style="font-family:'Kanit',sans-serif;font-weight:900;font-size:22px;color:#F5F5F5;letter-spacing:-0.03em;">SportMate TH</div>
+        <div style="font-size:12px;color:#A0A0A0;margin-top:1px;">สปอร์ตเมท — หาเพื่อนออกกำลังกาย</div>
+      </div>
+    </a>
+
+    <!-- Login Card -->
+    <div class="login-card">
+      <h1 style="font-family:'Kanit',sans-serif;font-weight:900;font-size:24px;color:#F5F5F5;margin-bottom:6px;letter-spacing:-0.03em;">เข้าสู่ระบบ</h1>
+      <p style="font-size:14px;color:#A0A0A0;margin-bottom:28px;">ยินดีต้อนรับกลับมา! เริ่มหาเพื่อนกีฬาได้เลย</p>
+
+      <form id="login-form" novalidate>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+
+          <!-- Email -->
+          <div>
+            <label class="field-label" for="l-email">อีเมล <span style="color:#FF4D1C;">*</span></label>
+            <input id="l-email" class="field-input" type="email" placeholder="your@email.com" required autocomplete="email">
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label class="field-label" for="l-password">รหัสผ่าน <span style="color:#FF4D1C;">*</span></label>
+            <div style="position:relative;">
+              <input id="l-password" class="field-input" type="password" placeholder="รหัสผ่านของคุณ" required autocomplete="current-password" style="padding-right:44px;">
+              <button type="button" id="toggle-lpw" onclick="togglePw()"
+                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#A0A0A0;cursor:pointer;font-size:16px;padding:4px;">👁</button>
+            </div>
+          </div>
+
+          <!-- Error -->
+          <div id="login-error" class="error-box"></div>
+
+          <!-- Submit -->
+          <button type="submit" id="login-btn" class="btn-login">
+            <span id="login-btn-text">เข้าสู่ระบบ</span>
+            <span id="login-spinner" style="display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
+          </button>
+
+        </div>
+      </form>
+
+      <p style="text-align:center;margin-top:24px;font-size:14px;color:#A0A0A0;">
+        ยังไม่มีบัญชี?
+        <a href="index.html" onclick="setTimeout(()=>openSignupModal&&openSignupModal(),100)" style="color:#FF4D1C;text-decoration:none;font-weight:600;">สมัครสมาชิกฟรี →</a>
+      </p>
+    </div>
+  </main>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2ByyVNuhwblvpPQf-Rxryr4POeV-MXpxO_NPxUv-SeULIk1shuc2gsbrxCpl-pi_rgA/exec';
+
+    // Show toast if redirected after signup
+    window.addEventListener('DOMContentLoaded', function() {
+      if (new URLSearchParams(window.location.search).get('registered') === '1') {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 4000);
+      }
+    });
+
+    function togglePw() {
+      const input = document.getElementById('l-password');
+      const btn = document.getElementById('toggle-lpw');
+      if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+      else { input.type = 'password'; btn.textContent = '👁'; }
+    }
+
+    async function hashPassword(password) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    function setLoading(on) {
+      document.getElementById('login-btn-text').style.display = on ? 'none' : 'inline';
+      document.getElementById('login-spinner').style.display = on ? 'inline-block' : 'none';
+      document.getElementById('login-btn').disabled = on;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('login-error');
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      showError('');
+
+      const email = document.getElementById('l-email').value.trim();
+      const pw = document.getElementById('l-password').value;
+
+      if (!email || !pw) { showError('กรุณากรอกอีเมลและรหัสผ่าน'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('รูปแบบอีเมลไม่ถูกต้อง'); return; }
+
+      setLoading(true);
+
+      // Demo mode (no backend URL set)
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
+        // Simulate login with any credentials for demo
+        localStorage.setItem('sm_user', JSON.stringify({
+          username: email.split('@')[0],
+          fullname: 'นักกีฬา Demo',
+          email: email
+        }));
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      try {
+        const password_hash = await hashPassword(pw);
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'login', email, password_hash })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem('sm_user', JSON.stringify({
+            username: data.username,
+            fullname: data.fullname,
+            email: data.email,
+            sports: data.sports
+          }));
+          window.location.href = 'dashboard.html';
+        } else {
+          showError(data.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+        }
+      } catch (err) {
+        showError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่');
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>

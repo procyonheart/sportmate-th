@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>หาเพื่อนกีฬา — SportMate TH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;900&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #FF4D1C;
+      --primary-light: #FF6B3D;
+      --primary-glow: rgba(255,77,28,0.3);
+      --surface: rgba(255,255,255,0.06);
+      --surface-hi: rgba(255,255,255,0.1);
+      --border: rgba(255,255,255,0.08);
+      --text: #F5F5F5;
+      --muted: #A0A0A0;
+      --dim: #505050;
+      --nav-h: 60px;
+    }
+
+    html, body { height: 100%; overflow: hidden; background: #0A0A0A; color: var(--text); font-family: 'Sarabun', sans-serif; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slide-up { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fab-pulse {
+      0%,100% { box-shadow: 0 6px 24px var(--primary-glow), 0 0 0 0 rgba(255,77,28,0.25); }
+      50%      { box-shadow: 0 6px 24px var(--primary-glow), 0 0 0 10px rgba(255,77,28,0); }
+    }
+
+    /* ── NAV ─────────────────────────────────────────────── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--nav-h); z-index: 500;
+      background: rgba(8,8,8,0.88);
+      backdrop-filter: blur(20px) saturate(200%);
+      -webkit-backdrop-filter: blur(20px) saturate(200%);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+    }
+    .nav-logo { display:flex; align-items:center; gap:8px; text-decoration:none; }
+    .nav-logo-text { font-family:'Kanit',sans-serif; font-weight:900; font-size:17px; color:var(--text); letter-spacing:-0.02em; }
+    .nav-user { display:flex; align-items:center; gap:10px; }
+    .nav-avatar {
+      width:32px; height:32px; border-radius:50%;
+      background: linear-gradient(135deg,var(--primary),#FFB800);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Kanit',sans-serif; font-weight:900; font-size:13px; color:white;
+    }
+    .nav-name { font-size:13px; color:var(--muted); }
+    .btn-logout {
+      padding:6px 14px; background:var(--surface); border:1px solid var(--border);
+      border-radius:8px; color:var(--muted); font-size:12px; cursor:pointer;
+      font-family:'Sarabun',sans-serif;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .btn-logout:hover { background:rgba(255,77,28,0.12); color:var(--primary); border-color:rgba(255,77,28,0.3); }
+
+    /* ── MAP ─────────────────────────────────────────────── */
+    #map {
+      position: fixed; top: var(--nav-h); left:0; right:0; bottom:0; z-index: 0;
+    }
+
+    /* ── SEARCH OVERLAY ──────────────────────────────────── */
+    .search-overlay {
+      position: fixed;
+      top: calc(var(--nav-h) + 10px);
+      left: 50%; transform: translateX(-50%);
+      width: min(580px, calc(100vw - 24px));
+      z-index: 400;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .search-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(8,8,8,0.85);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 10px 14px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05) inset;
+    }
+    .search-input {
+      flex:1; background:none; border:none; outline:none;
+      color:var(--text); font-family:'Sarabun',sans-serif; font-size:14px;
+    }
+    .search-input::placeholder { color: var(--dim); }
+    .dist-select {
+      background: rgba(255,255,255,0.06); border:1px solid var(--border);
+      border-radius:8px; color:var(--muted); font-family:'Sarabun',sans-serif;
+      font-size:12px; padding:5px 8px; outline:none; cursor:pointer; flex-shrink:0;
+    }
+    .dist-select option { background:#1A1A1A; }
+
+    .filter-row {
+      display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:2px 0;
+    }
+    .filter-row::-webkit-scrollbar { display:none; }
+    .chip {
+      flex-shrink:0; padding:5px 14px; border-radius:50px;
+      background: rgba(8,8,8,0.78); backdrop-filter:blur(12px);
+      border:1px solid var(--border); color:var(--muted);
+      font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .chip.active { background:rgba(255,77,28,0.18); border-color:rgba(255,77,28,0.5); color:var(--primary); }
+    .chip:hover:not(.active) { background:rgba(255,255,255,0.1); color:var(--text); }
+
+    /* ── FAB ─────────────────────────────────────────────── */
+    .fab {
+      position:fixed; bottom:92px; right:20px; z-index:400;
+      width:56px; height:56px; border-radius:18px;
+      background: linear-gradient(135deg,var(--primary),var(--primary-light));
+      border:none; color:white; font-size:28px; line-height:1; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 6px 24px var(--primary-glow), 0 1px 0 rgba(255,255,255,0.2) inset;
+      animation: fab-pulse 3s ease-in-out infinite;
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), bottom 0.4s cubic-bezier(0.32,0.72,0,1);
+    }
+    .fab:hover { transform: scale(1.1) translateY(-2px); box-shadow:0 10px 36px rgba(255,77,28,0.55); }
+    .fab:active { transform: scale(0.93); }
+    .fab.panel-open { bottom: calc(50vh + 12px); }
+
+    /* ── ACTIVITY PANEL ──────────────────────────────────── */
+    .act-panel {
+      position:fixed; left:0; right:0; bottom:0; z-index:400;
+      transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+    }
+    .act-panel.collapsed { transform: translateY(calc(100% - 72px)); }
+
+    .panel-bar {
+      position:relative;
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 0 20px; height:72px; cursor:pointer;
+      background: rgba(10,10,10,0.93);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      transition: background 0.2s;
+    }
+    .panel-bar:hover { background: rgba(20,20,20,0.96); }
+    .panel-pill {
+      position:absolute; top:10px; left:50%; transform:translateX(-50%);
+      width:36px; height:4px; border-radius:2px; background:rgba(255,255,255,0.15);
+    }
+    .panel-count-wrap { display:flex; align-items:center; gap:10px; }
+    .panel-badge {
+      background: linear-gradient(135deg,var(--primary),var(--primary-light));
+      color:white; font-family:'Kanit',sans-serif; font-weight:700; font-size:13px;
+      padding:3px 10px; border-radius:50px; min-width:28px; text-align:center;
+    }
+    .panel-label { font-family:'Kanit',sans-serif; font-weight:600; font-size:14px; }
+    .panel-chevron { font-size:20px; color:var(--muted); transition: transform 0.3s; }
+    .act-panel:not(.collapsed) .panel-chevron { transform: rotate(180deg); }
+
+    .panel-body {
+      height: calc(50vh - 72px);
+      background: rgba(8,8,8,0.97);
+      overflow-y:auto; scrollbar-width:thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    .panel-body::-webkit-scrollbar { width:4px; }
+    .panel-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:4px; }
+
+    .act-card {
+      padding:14px 20px; border-bottom:1px solid rgba(255,255,255,0.04);
+      cursor:pointer; transition: background 0.15s;
+      animation: slide-up 0.3s ease both;
+    }
+    .act-card:hover { background: rgba(255,255,255,0.03); }
+    .act-icon {
+      width:42px; height:42px; border-radius:14px; flex-shrink:0;
+      background: rgba(255,77,28,0.1); border:1px solid rgba(255,77,28,0.2);
+      display:flex; align-items:center; justify-content:center; font-size:22px;
+    }
+    .empty-state { padding:48px 20px; text-align:center; color:var(--dim); }
+
+    /* ── MODAL BASE ──────────────────────────────────────── */
+    .modal-ov {
+      position:fixed; inset:0; z-index:800;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      display:flex; align-items:flex-end; justify-content:center;
+      opacity:0; visibility:hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .modal-ov.open { opacity:1; visibility:visible; }
+    @media (min-width:640px) { .modal-ov { align-items:center; } }
+
+    .modal-card {
+      background: #111;
+      border:1px solid rgba(255,255,255,0.09);
+      border-radius:24px 24px 0 0;
+      width:100%; max-width:540px; max-height:92vh;
+      overflow-y:auto; scrollbar-width:none;
+      box-shadow: 0 -12px 48px rgba(0,0,0,0.7), 0 -1px 0 rgba(255,255,255,0.06) inset;
+      transform: translateY(40px);
+      transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+    }
+    .modal-card::-webkit-scrollbar { display:none; }
+    .modal-ov.open .modal-card { transform: translateY(0); }
+
+    @media (min-width:640px) {
+      .modal-card { border-radius:24px; transform:scale(0.9) translateY(0); max-height:88vh; }
+      .modal-ov.open .modal-card { transform:scale(1); }
+    }
+
+    .modal-pill-bar {
+      width:40px; height:4px; background:rgba(255,255,255,0.14);
+      border-radius:2px; margin:14px auto 0; display:block;
+    }
+    @media (min-width:640px) { .modal-pill-bar { display:none; } }
+
+    .modal-hd {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:18px 24px 0;
+    }
+    .modal-title { font-family:'Kanit',sans-serif; font-weight:700; font-size:18px; letter-spacing:-0.02em; }
+    .modal-x {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--surface); border:1px solid var(--border);
+      color:var(--muted); font-size:15px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .modal-x:hover { background:rgba(255,77,28,0.15); color:var(--primary); }
+    .modal-div { height:1px; background:var(--border); margin:16px 24px; }
+    .modal-body { padding:0 24px 28px; }
+
+    /* ── FORM ────────────────────────────────────────────── */
+    .flabel {
+      display:block; font-size:11px; font-weight:600; color:var(--muted);
+      margin-bottom:6px; letter-spacing:0.06em; text-transform:uppercase;
+    }
+    .finput, .ftextarea {
+      width:100%; background:rgba(255,255,255,0.04);
+      border:1.5px solid rgba(255,255,255,0.08); border-radius:12px;
+      padding:11px 14px; font-family:'Sarabun',sans-serif; font-size:14px;
+      color:var(--text); outline:none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .finput::placeholder, .ftextarea::placeholder { color:var(--dim); }
+    .finput:focus, .ftextarea:focus {
+      border-color:rgba(255,77,28,0.5); background:rgba(255,77,28,0.04);
+    }
+    .ftextarea { resize:vertical; min-height:80px; line-height:1.6; }
+
+    /* sport grid */
+    .sport-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
+    @media (max-width:360px) { .sport-grid { grid-template-columns:repeat(3,1fr); } }
+    .sport-btn {
+      padding:12px 6px;
+      background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.08);
+      border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:4px;
+      cursor:pointer; transition:background 0.2s, border-color 0.2s, color 0.2s;
+      color:var(--muted); font-family:'Sarabun',sans-serif; font-size:11px; text-align:center;
+    }
+    .sport-btn-icon { font-size:22px; line-height:1; }
+    .sport-btn:hover:not(.sel) { background:rgba(255,255,255,0.08); color:var(--text); }
+    .sport-btn.sel { background:rgba(255,77,28,0.15); border-color:rgba(255,77,28,0.5); color:var(--primary); }
+
+    .btn-gps {
+      padding:11px 14px; background:rgba(29,185,84,0.1);
+      border:1.5px solid rgba(29,185,84,0.2); border-radius:12px;
+      color:#1DB954; font-size:13px; font-weight:600; cursor:pointer;
+      white-space:nowrap; font-family:'Sarabun',sans-serif;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-gps:hover { background:rgba(29,185,84,0.2); }
+    .btn-gps.active { background:rgba(29,185,84,0.22); border-color:rgba(29,185,84,0.55); }
+
+    .btn-submit {
+      width:100%; padding:14px;
+      background: linear-gradient(135deg,var(--primary),var(--primary-light));
+      color:white; border:none; border-radius:14px;
+      font-family:'Kanit',sans-serif; font-weight:700; font-size:15px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      box-shadow: 0 4px 20px var(--primary-glow);
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+    }
+    .btn-submit:hover { transform:translateY(-2px); box-shadow:0 8px 32px var(--primary-glow); }
+    .btn-submit:active { transform:scale(0.96); }
+    .btn-submit:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+    /* ── DETAIL MODAL ────────────────────────────────────── */
+    .sport-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(255,77,28,0.12); border:1px solid rgba(255,77,28,0.25);
+      border-radius:50px; padding:5px 14px;
+      font-family:'Kanit',sans-serif; font-weight:700; font-size:14px; color:var(--primary);
+    }
+    .info-row {
+      display:flex; align-items:flex-start; gap:12px;
+      padding:11px 0; border-bottom:1px solid rgba(255,255,255,0.04);
+    }
+    .info-row:last-of-type { border-bottom:none; }
+    .info-icon { font-size:18px; width:22px; text-align:center; flex-shrink:0; margin-top:1px; }
+    .info-text { font-size:14px; color:var(--text); line-height:1.5; }
+    .info-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+    .detail-desc {
+      margin:14px 0; padding:14px;
+      background:rgba(255,255,255,0.03); border-radius:12px;
+      border:1px solid var(--border); font-size:14px; color:var(--muted); line-height:1.7;
+      font-style:italic;
+    }
+    .btn-join {
+      width:100%; padding:14px;
+      background: linear-gradient(135deg,var(--primary),var(--primary-light));
+      color:white; border:none; border-radius:14px;
+      font-family:'Kanit',sans-serif; font-weight:700; font-size:15px; cursor:pointer;
+      box-shadow: 0 4px 20px var(--primary-glow);
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+    }
+    .btn-join:hover { transform:translateY(-2px); box-shadow:0 8px 32px var(--primary-glow); }
+    .btn-join:active { transform:scale(0.96); }
+
+    /* ── TOAST ───────────────────────────────────────────── */
+    .toast {
+      position:fixed; bottom:32px; left:50%;
+      transform: translateX(-50%) translateY(80px);
+      background: linear-gradient(135deg,#1DB954,#17a348);
+      color:white; padding:10px 22px; border-radius:50px;
+      font-family:'Kanit',sans-serif; font-weight:600; font-size:14px;
+      box-shadow: 0 4px 20px rgba(29,185,84,0.4);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      z-index:1000; white-space:nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.err {
+      background: linear-gradient(135deg,var(--primary),var(--primary-light));
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+
+    /* Leaflet overrides */
+    .leaflet-control-attribution {
+      background: rgba(0,0,0,0.5) !important;
+      color: rgba(255,255,255,0.35) !important; font-size:9px !important;
+    }
+    .leaflet-control-attribution a { color:rgba(255,255,255,0.45) !important; }
+    .leaflet-control-zoom a {
+      background:rgba(12,12,12,0.9) !important; color:#ccc !important;
+      border-color:rgba(255,255,255,0.1) !important;
+    }
+    .leaflet-control-zoom a:hover { background:rgba(28,28,28,0.95) !important; }
+    .leaflet-popup-content-wrapper {
+      background:#161616 !important; border:1px solid rgba(255,255,255,0.1) !important;
+      border-radius:14px !important; color:var(--text) !important;
+      box-shadow:0 4px 24px rgba(0,0,0,0.6) !important;
+    }
+    .leaflet-popup-tip { background:#161616 !important; }
+
+    /* ── LOCATION SUGGESTIONS ────────────────────────────────── */
+    .loc-suggestions {
+      position:relative; z-index:10;
+      margin-top:5px;
+      background:rgba(14,14,14,0.98);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:12px; overflow:hidden;
+      box-shadow:0 8px 32px rgba(0,0,0,0.6);
+    }
+    .loc-suggest-item {
+      padding:10px 14px; font-size:13px; color:var(--muted);
+      cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.04);
+      transition:background 0.15s, color 0.15s; line-height:1.4;
+      display:flex; align-items:center; gap:8px;
+    }
+    .loc-suggest-item:last-child { border-bottom:none; }
+    .loc-suggest-item:hover { background:rgba(255,77,28,0.1); color:var(--text); }
+    .loc-suggest-icon { font-size:14px; flex-shrink:0; }
+    .post-map-preview {
+      height:160px; border-radius:12px; overflow:hidden;
+      border:1.5px solid rgba(255,255,255,0.08);
+      margin-top:8px; box-shadow:0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    /* ── PROFILE MODAL ───────────────────────────────────────── */
+    .prof-avatar-preview {
+      width:72px; height:72px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:32px; margin:0 auto 16px;
+      border:2px solid rgba(255,255,255,0.18);
+      box-shadow:0 4px 20px rgba(0,0,0,0.5);
+      transition:background 0.3s;
+    }
+    .prof-emoji-grid {
+      display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:14px;
+    }
+    @media (max-width:360px) { .prof-emoji-grid { grid-template-columns:repeat(5,1fr); } }
+    .prof-emoji-btn {
+      aspect-ratio:1; font-size:22px;
+      background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.08);
+      border-radius:10px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:background 0.15s, border-color 0.15s;
+    }
+    .prof-emoji-btn:hover:not(.sel) { background:rgba(255,255,255,0.1); }
+    .prof-emoji-btn.sel { background:rgba(255,77,28,0.18); border-color:rgba(255,77,28,0.5); }
+    .prof-color-grid { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+    .prof-color-btn {
+      width:32px; height:32px; border-radius:50%; cursor:pointer;
+      border:2px solid transparent;
+      transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1), border-color 0.2s;
+    }
+    .prof-color-btn:hover { transform:scale(1.15); }
+    .prof-color-btn.sel { border-color:white; transform:scale(1.2); }
+    .nav-avatar { cursor:pointer; }
+    .nav-avatar:hover { opacity:0.85; }
+  </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- ── NAV ───────────────────────────────────────────────────── -->
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <span style="font-size:22px;">🏃</span>
+    <span class="nav-logo-text">SportMate TH</span>
+  </a>
+  <div class="nav-user">
+    <button class="nav-avatar" id="user-avatar" onclick="openProfile()" title="แก้ไขโปรไฟล์"></button>
+    <span class="nav-name" id="user-username"></span>
+    <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+  </div>
+</nav>
+
+<!-- ── MAP ────────────────────────────────────────────────────── -->
+<div id="map"></div>
+
+<!-- ── SEARCH OVERLAY ─────────────────────────────────────────── -->
+<div class="search-overlay">
+  <div class="search-bar">
+    <span style="font-size:16px;flex-shrink:0;">🔍</span>
+    <input class="search-input" id="search-input" type="text"
+      placeholder="ค้นหากีฬา สถานที่ หรือชื่อผู้โพส..." autocomplete="off">
+    <select class="dist-select" id="dist-filter" onchange="applyFilters()">
+      <option value="all">ทุกระยะ</option>
+      <option value="5">≤ 5 กม.</option>
+      <option value="10">≤ 10 กม.</option>
+      <option value="25" selected>≤ 25 กม.</option>
+      <option value="50">≤ 50 กม.</option>
+    </select>
+  </div>
+  <div class="filter-row">
+    <span class="chip active" onclick="setSportFilter('all',this)">ทั้งหมด</span>
+    <span class="chip" onclick="setSportFilter('วิ่ง',this)">🏃 วิ่ง</span>
+    <span class="chip" onclick="setSportFilter('ฟุตบอล',this)">⚽ ฟุตบอล</span>
+    <span class="chip" onclick="setSportFilter('โยคะ',this)">🧘 โยคะ</span>
+    <span class="chip" onclick="setSportFilter('มวยไทย',this)">🥊 มวย</span>
+    <span class="chip" onclick="setSportFilter('แบดมินตัน',this)">🏸 แบด</span>
+    <span class="chip" onclick="setSportFilter('ว่ายน้ำ',this)">🏊 ว่าย</span>
+    <span class="chip" onclick="setSportFilter('ปั่นจักรยาน',this)">🚴 จักรยาน</span>
+    <span class="chip" onclick="setSportFilter('ออกกำลังกาย',this)">🏋️ ฟิตเนส</span>
+  </div>
+</div>
+
+<!-- ── FAB ────────────────────────────────────────────────────── -->
+<button class="fab" id="fab" onclick="openCreateModal()" title="สร้างกิจกรรมใหม่">+</button>
+
+<!-- ── ACTIVITY PANEL ─────────────────────────────────────────── -->
+<div class="act-panel collapsed" id="act-panel">
+  <div class="panel-bar" onclick="togglePanel()">
+    <div class="panel-pill"></div>
+    <div class="panel-count-wrap">
+      <span class="panel-badge" id="panel-count">0</span>
+      <span class="panel-label">กิจกรรมใกล้เคียง</span>
+    </div>
+    <span class="panel-chevron">▲</span>
+  </div>
+  <div class="panel-body" id="act-feed">
+    <div class="empty-state">
+      <div style="font-size:38px;margin-bottom:10px;">🏃</div>
+      <div style="font-size:14px;">กำลังโหลดกิจกรรม...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CREATE POST MODAL ──────────────────────────────────────── -->
+<div class="modal-ov" id="modal-create" onclick="ovClick(event,'modal-create')">
+  <div class="modal-card">
+    <span class="modal-pill-bar"></span>
+    <div class="modal-hd">
+      <span class="modal-title">📍 สร้างกิจกรรมใหม่</span>
+      <button class="modal-x" onclick="closeModal('modal-create')">✕</button>
+    </div>
+    <div class="modal-div"></div>
+    <div class="modal-body">
+      <form id="post-form" novalidate>
+
+        <!-- กีฬา -->
+        <div style="margin-bottom:18px;">
+          <label class="flabel">เลือกกีฬา *</label>
+          <div class="sport-grid">
+            <button type="button" class="sport-btn" data-sport="🏃 วิ่ง" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🏃</span><span>วิ่ง</span></button>
+            <button type="button" class="sport-btn" data-sport="⚽ ฟุตบอล" onclick="pickSport(this)">
+              <span class="sport-btn-icon">⚽</span><span>ฟุตบอล</span></button>
+            <button type="button" class="sport-btn" data-sport="🧘 โยคะ" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🧘</span><span>โยคะ</span></button>
+            <button type="button" class="sport-btn" data-sport="🥊 มวยไทย" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🥊</span><span>มวยไทย</span></button>
+            <button type="button" class="sport-btn" data-sport="🏸 แบดมินตัน" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🏸</span><span>แบดมินตัน</span></button>
+            <button type="button" class="sport-btn" data-sport="🏊 ว่ายน้ำ" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🏊</span><span>ว่ายน้ำ</span></button>
+            <button type="button" class="sport-btn" data-sport="🚴 ปั่นจักรยาน" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🚴</span><span>จักรยาน</span></button>
+            <button type="button" class="sport-btn" data-sport="🏋️ ออกกำลังกาย" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🏋️</span><span>ฟิตเนส</span></button>
+            <button type="button" class="sport-btn" data-sport="⛳ กอล์ฟ" onclick="pickSport(this)">
+              <span class="sport-btn-icon">⛳</span><span>กอล์ฟ</span></button>
+            <button type="button" class="sport-btn" data-sport="🏀 บาสเกตบอล" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🏀</span><span>บาสเกตบอล</span></button>
+            <button type="button" class="sport-btn" data-sport="🏐 วอลเลย์บอล" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🏐</span><span>วอลเลย์</span></button>
+            <button type="button" class="sport-btn" data-sport="🎾 เทนนิส" onclick="pickSport(this)">
+              <span class="sport-btn-icon">🎾</span><span>เทนนิส</span></button>
+          </div>
+          <input type="hidden" id="p-sport">
+        </div>
+
+        <!-- จำนวนคน -->
+        <div style="margin-bottom:14px;">
+          <label class="flabel">ต้องการเพิ่มเติม (คน) *</label>
+          <input id="p-maxpeople" class="finput" type="number" min="1" max="50" placeholder="เช่น 3" value="2" required>
+        </div>
+
+        <!-- สถานที่ -->
+        <div style="margin-bottom:14px;">
+          <label class="flabel">สถานที่ *</label>
+          <div style="display:flex;gap:8px;">
+            <input id="p-location" class="finput" type="text" placeholder="เช่น สวนลุมพินี กรุงเทพ" required style="flex:1;" oninput="onLocationInput()" autocomplete="off">
+            <button type="button" class="btn-gps" id="gps-btn" onclick="useMyLocation()">📡 GPS</button>
+          </div>
+          <div id="gps-coords" style="font-size:11px;color:#1DB954;margin-top:5px;display:none;"></div>
+          <div id="loc-suggestions" class="loc-suggestions" style="display:none;"></div>
+          <div id="post-map-container" style="display:none;margin-top:8px;">
+            <div id="post-map-preview" class="post-map-preview"></div>
+          </div>
+        </div>
+
+        <!-- วันเวลา -->
+        <div style="margin-bottom:14px;">
+          <label class="flabel">วันและเวลา *</label>
+          <input id="p-datetime" class="finput" type="datetime-local" required>
+        </div>
+
+        <!-- รายละเอียด -->
+        <div style="margin-bottom:20px;">
+          <label class="flabel">รายละเอียด (ไม่บังคับ)</label>
+          <textarea id="p-desc" class="ftextarea" placeholder="เช่น นัดเจอที่ประตูหน้า มือใหม่ยินดีต้อนรับ"></textarea>
+        </div>
+
+        <button type="submit" id="post-btn" class="btn-submit">
+          <span id="post-btn-text">โพสกิจกรรม 🚀</span>
+          <span id="post-spinner" style="display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ── DETAIL MODAL ───────────────────────────────────────────── -->
+<div class="modal-ov" id="modal-detail" onclick="ovClick(event,'modal-detail')">
+  <div class="modal-card">
+    <span class="modal-pill-bar"></span>
+    <div class="modal-hd">
+      <span id="detail-badge" class="sport-badge"></span>
+      <button class="modal-x" onclick="closeModal('modal-detail')">✕</button>
+    </div>
+    <div class="modal-div"></div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
+<!-- ── PROFILE MODAL ───────────────────────────────────────────── -->
+<div class="modal-ov" id="modal-profile" onclick="ovClick(event,'modal-profile')">
+  <div class="modal-card">
+    <span class="modal-pill-bar"></span>
+    <div class="modal-hd">
+      <span class="modal-title">✏️ แก้ไขโปรไฟล์</span>
+      <button class="modal-x" onclick="closeModal('modal-profile')">✕</button>
+    </div>
+    <div class="modal-div"></div>
+    <div class="modal-body">
+      <div id="prof-avatar-preview" class="prof-avatar-preview"></div>
+      <label class="flabel">เลือก Avatar</label>
+      <div id="prof-emoji-grid" class="prof-emoji-grid"></div>
+      <label class="flabel">สีพื้นหลัง</label>
+      <div id="prof-color-grid" class="prof-color-grid" style="margin-bottom:18px;"></div>
+      <div style="margin-bottom:14px;">
+        <label class="flabel">ชื่อที่แสดง</label>
+        <input id="prof-displayname" class="finput" type="text" placeholder="ชื่อของคุณ">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label class="flabel">Bio (ไม่บังคับ)</label>
+        <textarea id="prof-bio" class="ftextarea" placeholder="เล่าให้ฟังว่าคุณชอบกีฬาอะไร..." style="min-height:70px;"></textarea>
+      </div>
+      <button type="button" class="btn-submit" onclick="saveProfile()">บันทึกโปรไฟล์ ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2ByyVNuhwblvpPQf-Rxryr4POeV-MXpxO_NPxUv-SeULIk1shuc2gsbrxCpl-pi_rgA/exec';
+
+// ─── Auth ────────────────────────────────────────────────────
+const userRaw = localStorage.getItem('sm_user');
+if (!userRaw) window.location.href = 'login.html';
+const me = JSON.parse(userRaw || '{}');
+
+// ─── State ───────────────────────────────────────────────────
+let map, userMarker;
+let userLat = null, userLng = null;
+let activityMarkers = [];
+let allActivities = [];
+let activeSport = 'all';
+let searchQ = '';
+let panelOpen = false;
+let postLat = null, postLng = null;
+let pickedSport = '';
+
+let locSearchTimer;
+let postPreviewMap = null;
+let postPreviewMarker = null;
+
+const AVATAR_EMOJIS = ['🏃','⚽','🧘','🥊','🏸','🏊','🚴','🏋️','⛳','🏀','🏐','🎾','🌟','🔥','💪','🦁','🐯','🦅'];
+const AVATAR_COLORS = ['#FF4D1C','#1DB954','#3B82F6','#F59E0B','#8B5CF6','#EC4899','#06B6D4','#10B981'];
+let profileData = {};
+let pickedProfileEmoji = '';
+let pickedProfileColor = '#FF4D1C';
+
+// ─── Init ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('user-username').textContent = '@' + (me.username || '');
+  loadProfile();
+
+  const dt = new Date(Date.now() + 3600000);
+  dt.setSeconds(0, 0);
+  document.getElementById('p-datetime').value = dt.toISOString().slice(0, 16);
+
+  let searchTimer;
+  document.getElementById('search-input').addEventListener('input', function() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function() {
+      searchQ = document.getElementById('search-input').value.toLowerCase().trim();
+      applyFilters();
+    }, 280);
+  });
+
+  document.getElementById('post-form').addEventListener('submit', handlePost);
+
+  initMap();
+  loadActivities();
+});
+
+function logout() {
+  localStorage.removeItem('sm_user');
+  window.location.href = 'login.html';
+}
+
+// ─── Toast ───────────────────────────────────────────────────
+function showToast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr ? ' err' : '');
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3500);
+}
+
+// ─── Map ─────────────────────────────────────────────────────
+function initMap() {
+  map = L.map('map', { zoomControl: false }).setView([13.75, 100.52], 12);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19
+  }).addTo(map);
+
+  L.control.zoom({ position: 'topright' }).addTo(map);
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        map.setView([userLat, userLng], 14);
+
+        const uIcon = L.divIcon({
+          html: '<div style="width:20px;height:20px;border-radius:50%;background:#FF4D1C;border:3px solid white;box-shadow:0 0 0 8px rgba(255,77,28,0.18),0 0 20px rgba(255,77,28,0.6);"></div>',
+          iconSize: [20,20], iconAnchor: [10,10], className: ''
+        });
+        userMarker = L.marker([userLat, userLng], { icon: uIcon }).addTo(map)
+          .bindTooltip('📍 คุณอยู่ที่นี่', { permanent:false, direction:'top' });
+
+        renderMarkers();
+      },
+      function() { renderMarkers(); }
+    );
+  }
+}
+
+// ─── GPS for form ─────────────────────────────────────────────
+function useMyLocation() {
+  const btn = document.getElementById('gps-btn');
+  btn.textContent = '⏳'; btn.disabled = true;
+  if (!navigator.geolocation) {
+    showToast('เบราว์เซอร์ไม่รองรับ GPS', true);
+    btn.textContent = '📡 GPS'; btn.disabled = false; return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      postLat = pos.coords.latitude;
+      postLng = pos.coords.longitude;
+      btn.textContent = '✓ GPS'; btn.disabled = false; btn.classList.add('active');
+      const c = document.getElementById('gps-coords');
+      c.textContent = '📍 ' + postLat.toFixed(5) + ', ' + postLng.toFixed(5);
+      c.style.display = 'block';
+      if (!document.getElementById('p-location').value)
+        document.getElementById('p-location').value = 'ตำแหน่งปัจจุบัน (' + postLat.toFixed(4) + ', ' + postLng.toFixed(4) + ')';
+      showPostPreviewMap(postLat, postLng);
+      showToast('ระบุตำแหน่ง GPS สำเร็จ ✓');
+    },
+    function() {
+      showToast('ไม่สามารถรับตำแหน่ง GPS ได้', true);
+      btn.textContent = '📡 GPS'; btn.disabled = false;
+    }
+  );
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+function dist(la1,ln1,la2,ln2) {
+  const R=6371, dL=(la2-la1)*Math.PI/180, dN=(ln2-ln1)*Math.PI/180;
+  const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dN/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function fmtDist(km) { return km<1 ? Math.round(km*1000)+' ม.' : km.toFixed(1)+' กม.'; }
+
+const EMOJIS = { วิ่ง:'🏃',ฟุตบอล:'⚽',โยคะ:'🧘',มวยไทย:'🥊',แบดมินตัน:'🏸',ว่ายน้ำ:'🏊',ปั่นจักรยาน:'🚴',ออกกำลังกาย:'🏋️',กอล์ฟ:'⛳',บาสเกตบอล:'🏀',วอลเลย์บอล:'🏐',เทนนิส:'🎾' };
+function emoji(sport) {
+  for (const k in EMOJIS) { if (sport && sport.includes(k)) return EMOJIS[k]; }
+  return '🏃';
+}
+function sportName(s) { return (s||'').replace(/^[^฀-๿\w]+/,'').trim(); }
+
+// ─── Load Activities ──────────────────────────────────────────
+async function loadActivities() {
+  try {
+    let list = [];
+    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
+      list = demo();
+    } else {
+      const r = await fetch(APPS_SCRIPT_URL + '?action=getActivities');
+      const d = await r.json();
+      list = (d.success && d.activities && d.activities.length) ? d.activities : demo();
+    }
+    allActivities = list;
+  } catch(e) {
+    allActivities = demo();
+  }
+  applyFilters();
+}
+
+function demo() {
+  const now = new Date();
+  const add = h => new Date(now.getTime()+h*3600000).toISOString().slice(0,16);
+  return [
+    { id:'1', username:'SportKing99',  sport:'🏃 วิ่ง',         location_name:'สวนลุมพินี',           lat:13.7303, lng:100.5418, datetime:add(2),  description:'Morning run 5km มือใหม่ยินดีต้อนรับ 🌅', max_people:5, created_at:now.toISOString() },
+    { id:'2', username:'FutbolTH',     sport:'⚽ ฟุตบอล',       location_name:'สนามฟุตบอลรามคำแหง',   lat:13.7569, lng:100.6142, datetime:add(5),  description:'ฟุตบอล 7 คน ขาดอีก 3 คน ทุกระดับยินดีต้อนรับ', max_people:3, created_at:now.toISOString() },
+    { id:'3', username:'YogaGirl',     sport:'🧘 โยคะ',         location_name:'สวนจตุจักร',            lat:13.7999, lng:100.5558, datetime:add(8),  description:'Yoga เช้า เน้นยืดเหยียด นำอุปกรณ์มาเอง',  max_people:4, created_at:now.toISOString() },
+    { id:'4', username:'BikeRider',    sport:'🚴 ปั่นจักรยาน',  location_name:'เกาะรัตนโกสินทร์',     lat:13.7519, lng:100.4927, datetime:add(12), description:'ปั่นรอบเกาะ 10km ความเร็วปานกลาง',  max_people:6, created_at:now.toISOString() },
+    { id:'5', username:'BoxerTH',      sport:'🥊 มวยไทย',       location_name:'ค่ายมวยรัชดา',          lat:13.7840, lng:100.5667, datetime:add(24), description:'ซ้อมมวยไทยพื้นฐาน เหมาะผู้เริ่มต้น',  max_people:2, created_at:now.toISOString() },
+    { id:'6', username:'SwimBKK',      sport:'🏊 ว่ายน้ำ',       location_name:'สระว่ายน้ำ รามา 9',    lat:13.7456, lng:100.5696, datetime:add(3),  description:'ว่ายน้ำตอนเช้า 1 ชั่วโมง ทุกระดับ',  max_people:3, created_at:now.toISOString() },
+  ];
+}
+
+// ─── Filter + apply ───────────────────────────────────────────
+function getFiltered() {
+  let list = allActivities;
+
+  if (activeSport !== 'all')
+    list = list.filter(a => a.sport && a.sport.includes(activeSport));
+
+  if (searchQ)
+    list = list.filter(a =>
+      (a.sport||'').toLowerCase().includes(searchQ) ||
+      (a.location_name||'').toLowerCase().includes(searchQ) ||
+      (a.username||'').toLowerCase().includes(searchQ) ||
+      (a.description||'').toLowerCase().includes(searchQ)
+    );
+
+  const dv = document.getElementById('dist-filter').value;
+  if (userLat && dv !== 'all') {
+    const maxKm = parseInt(dv);
+    list = list.filter(a => !a.lat || !a.lng || dist(userLat,userLng,a.lat,a.lng) <= maxKm);
+  }
+
+  return list.slice().sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+}
+
+function applyFilters() {
+  const f = getFiltered();
+  document.getElementById('panel-count').textContent = f.length;
+  renderFeed(f);
+  renderMarkers(f);
+}
+
+function setSportFilter(sport, el) {
+  activeSport = sport;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+// ─── Feed ─────────────────────────────────────────────────────
+function renderFeed(list) {
+  const feed = document.getElementById('act-feed');
+  if (!list || !list.length) {
+    feed.innerHTML = '<div class="empty-state"><div style="font-size:38px;margin-bottom:10px;">😔</div><div style="font-size:14px;color:#A0A0A0;">ไม่พบกิจกรรม</div><div style="font-size:12px;margin-top:6px;color:#505050;">ลองเปลี่ยนตัวกรอง หรือเป็นคนแรกที่โพส!</div></div>';
+    return;
+  }
+
+  feed.innerHTML = list.map((a, i) => {
+    const dt = new Date(a.datetime);
+    const dtS = dt.toLocaleDateString('th-TH',{weekday:'short',month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    const em = emoji(a.sport);
+    const sn = sportName(a.sport);
+    const d = (userLat && a.lat && a.lng) ? fmtDist(dist(userLat,userLng,a.lat,a.lng)) : null;
+    return `<div class="act-card" style="animation-delay:${i*0.04}s" onclick="showDetail('${a.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+          <div class="act-icon">${em}</div>
+          <div style="min-width:0;">
+            <div style="font-family:'Kanit',sans-serif;font-weight:700;font-size:14px;">${sn}</div>
+            <div style="font-size:12px;color:#A0A0A0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${a.location_name||''}</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          ${d?`<div style="font-size:11px;color:#FF4D1C;font-weight:700;margin-bottom:2px;">${d}</div>`:''}
+          <div style="font-size:11px;color:#505050;">👥 ${a.max_people||1} คน</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:#A0A0A0;">🕐 ${dtS}</span>
+        <span style="font-size:12px;color:#505050;">@${a.username||''}</span>
+      </div>
+      ${a.description?`<div style="margin-top:5px;font-size:12px;color:#606060;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${a.description}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ─── Markers ──────────────────────────────────────────────────
+function renderMarkers(list) {
+  if (!map) return;
+  activityMarkers.forEach(m => m.remove());
+  activityMarkers = [];
+
+  const data = list || getFiltered();
+  data.forEach(a => {
+    if (!a.lat || !a.lng) return;
+    const em = emoji(a.sport);
+    const icon = L.divIcon({
+      html: `<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#FF4D1C,#FF6B3D);border:2.5px solid rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(255,77,28,0.55),0 1px 0 rgba(255,255,255,0.25) inset;cursor:pointer;">${em}</div>`,
+      iconSize:[44,44], iconAnchor:[22,22], className:''
+    });
+    const m = L.marker([a.lat, a.lng], { icon })
+      .addTo(map)
+      .on('click', function() { showDetail(a.id); });
+    activityMarkers.push(m);
+  });
+}
+
+// ─── Detail Modal ─────────────────────────────────────────────
+function showDetail(id) {
+  const a = allActivities.find(x => x.id == id);
+  if (!a) return;
+
+  const em = emoji(a.sport);
+  const sn = sportName(a.sport);
+  const dt = new Date(a.datetime);
+  const dtS = dt.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' เวลา '+dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const d = (userLat && a.lat && a.lng) ? fmtDist(dist(userLat,userLng,a.lat,a.lng)) : null;
+
+  document.getElementById('detail-badge').innerHTML = em + ' ' + sn;
+  document.getElementById('detail-body').innerHTML = `
+    <div class="info-row">
+      <span class="info-icon">📍</span>
+      <div>
+        <div class="info-text">${a.location_name||'ไม่ระบุสถานที่'}</div>
+        ${d?`<div class="info-sub">ห่างจากคุณ ${d}</div>`:''}
+      </div>
+    </div>
+    <div class="info-row">
+      <span class="info-icon">🗓</span>
+      <div class="info-text">${dtS}</div>
+    </div>
+    <div class="info-row">
+      <span class="info-icon">👥</span>
+      <div class="info-text">ต้องการเพิ่มอีก <strong style="color:#FF4D1C;">${a.max_people||1} คน</strong></div>
+    </div>
+    <div class="info-row">
+      <span class="info-icon">👤</span>
+      <div class="info-text">โพสโดย <strong>@${a.username||''}</strong></div>
+    </div>
+    ${a.description?`<div class="detail-desc">"${a.description}"</div>`:''}
+    <button class="btn-join" onclick="joinActivity('${(a.username||'').replace(/'/g,"\\'")}')">สนใจร่วมกิจกรรม 🏃</button>
+  `;
+
+  openModal('modal-detail');
+  if (a.lat && a.lng && map) map.flyTo([a.lat, a.lng], 15, { duration:1 });
+}
+
+function joinActivity(username) {
+  if (navigator.clipboard) navigator.clipboard.writeText('@' + username).catch(()=>{});
+  showToast('คัดลอก @' + username + ' เพื่อติดต่อ ✓');
+  closeModal('modal-detail');
+}
+
+// ─── Panel ────────────────────────────────────────────────────
+function togglePanel() {
+  panelOpen = !panelOpen;
+  const panel = document.getElementById('act-panel');
+  const fab = document.getElementById('fab');
+  panel.classList.toggle('collapsed', !panelOpen);
+  fab.classList.toggle('panel-open', panelOpen);
+}
+
+// ─── Modals ───────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function ovClick(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+
+function openCreateModal() { openModal('modal-create'); }
+
+// ─── Sport selector ───────────────────────────────────────────
+function pickSport(btn) {
+  document.querySelectorAll('.sport-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  pickedSport = btn.dataset.sport;
+  document.getElementById('p-sport').value = pickedSport;
+}
+
+// ─── Post Submit ──────────────────────────────────────────────
+async function handlePost(e) {
+  e.preventDefault();
+  const sport = document.getElementById('p-sport').value;
+  const loc = document.getElementById('p-location').value.trim();
+  const dt = document.getElementById('p-datetime').value;
+  const mp = document.getElementById('p-maxpeople').value;
+  const desc = document.getElementById('p-desc').value.trim();
+
+  if (!sport) { showToast('กรุณาเลือกกีฬา', true); return; }
+  if (!loc || !dt || !mp) { showToast('กรุณากรอกข้อมูลให้ครบ', true); return; }
+
+  const btn = document.getElementById('post-btn');
+  document.getElementById('post-btn-text').style.display = 'none';
+  document.getElementById('post-spinner').style.display = 'inline-block';
+  btn.disabled = true;
+
+  const payload = {
+    action:'postActivity', username:me.username, sport, location_name:loc,
+    lat:postLat, lng:postLng, datetime:dt, description:desc, max_people:parseInt(mp)
+  };
+
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
+    const newA = { ...payload, id:'demo_'+Date.now(), created_at:new Date().toISOString() };
+    delete newA.action;
+    allActivities.unshift(newA);
+    if (postLat && postLng && map) map.flyTo([postLat, postLng], 15);
+    applyFilters();
+    showToast('โพสกิจกรรมสำเร็จ! 🎉');
+    resetForm();
+    closeModal('modal-create');
+  } else {
+    try {
+      const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
+      const data = await res.json();
+      if (data.success) {
+        showToast('โพสกิจกรรมสำเร็จ! 🎉');
+        resetForm();
+        closeModal('modal-create');
+        await loadActivities();
+      } else {
+        showToast(data.message || 'เกิดข้อผิดพลาด', true);
+      }
+    } catch(err) {
+      showToast('ไม่สามารถเชื่อมต่อได้', true);
+    }
+  }
+
+  document.getElementById('post-btn-text').style.display = 'inline';
+  document.getElementById('post-spinner').style.display = 'none';
+  btn.disabled = false;
+}
+
+// ─── Location Search (Nominatim) ─────────────────────────────
+function onLocationInput() {
+  clearTimeout(locSearchTimer);
+  const q = document.getElementById('p-location').value.trim();
+  if (q.length < 2) { clearSuggestions(); return; }
+  locSearchTimer = setTimeout(function() { locationSearch(q); }, 400);
+}
+
+async function locationSearch(q) {
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=5&accept-language=th';
+    const res = await fetch(url);
+    const results = await res.json();
+    showSuggestions(results);
+  } catch(e) {
+    clearSuggestions();
+  }
+}
+
+function showSuggestions(results) {
+  const box = document.getElementById('loc-suggestions');
+  if (!results || !results.length) { box.style.display = 'none'; return; }
+  box.innerHTML = results.map(function(r) {
+    const parts = r.display_name.split(',');
+    const short = parts.slice(0, 3).join(',').trim();
+    const escaped = short.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    return '<div class="loc-suggest-item" data-name="' + escaped + '" data-lat="' + r.lat + '" data-lng="' + r.lon + '">'
+      + '<span class="loc-suggest-icon">📍</span>'
+      + '<span>' + escaped + '</span>'
+      + '</div>';
+  }).join('');
+  box.querySelectorAll('.loc-suggest-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      pickLocation(item.dataset.name, parseFloat(item.dataset.lat), parseFloat(item.dataset.lng));
+    });
+  });
+  box.style.display = 'block';
+}
+
+function clearSuggestions() {
+  const box = document.getElementById('loc-suggestions');
+  if (box) box.style.display = 'none';
+}
+
+function pickLocation(name, lat, lng) {
+  document.getElementById('p-location').value = name;
+  postLat = parseFloat(lat);
+  postLng = parseFloat(lng);
+  clearSuggestions();
+  const c = document.getElementById('gps-coords');
+  c.textContent = '📍 ' + postLat.toFixed(5) + ', ' + postLng.toFixed(5);
+  c.style.display = 'block';
+  showPostPreviewMap(postLat, postLng);
+  if (map) map.flyTo([postLat, postLng], 14, { duration: 1.2 });
+}
+
+function showPostPreviewMap(lat, lng) {
+  const container = document.getElementById('post-map-container');
+  container.style.display = 'block';
+
+  if (!postPreviewMap) {
+    postPreviewMap = L.map('post-map-preview', {
+      zoomControl: false, dragging: false,
+      scrollWheelZoom: false, doubleClickZoom: false,
+      touchZoom: false, keyboard: false
+    }).setView([lat, lng], 15);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19
+    }).addTo(postPreviewMap);
+  } else {
+    postPreviewMap.setView([lat, lng], 15);
+    if (postPreviewMarker) { postPreviewMarker.remove(); postPreviewMarker = null; }
+  }
+
+  setTimeout(function() { if (postPreviewMap) postPreviewMap.invalidateSize(); }, 120);
+
+  const pinIcon = L.divIcon({
+    html: '<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#FF4D1C,#FF6B3D);border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px rgba(255,77,28,0.6),0 0 0 8px rgba(255,77,28,0.15);">📍</div>',
+    iconSize: [38,38], iconAnchor: [19,19], className: ''
+  });
+  postPreviewMarker = L.marker([lat, lng], { icon: pinIcon }).addTo(postPreviewMap);
+}
+
+// ─── Profile ─────────────────────────────────────────────────
+function loadProfile() {
+  const raw = localStorage.getItem('sm_profile');
+  profileData = raw ? JSON.parse(raw) : {};
+  applyProfile();
+}
+
+function applyProfile() {
+  const avatar = document.getElementById('user-avatar');
+  if (profileData.avatarEmoji) {
+    avatar.textContent = profileData.avatarEmoji;
+    avatar.style.fontSize = '20px';
+    avatar.style.background = profileData.avatarColor || '#FF4D1C';
+  } else {
+    avatar.textContent = (me.fullname || me.username || 'U')[0].toUpperCase();
+    avatar.style.fontSize = '';
+    avatar.style.background = 'linear-gradient(135deg,var(--primary),#FFB800)';
+  }
+}
+
+function openProfile() {
+  pickedProfileEmoji = profileData.avatarEmoji || '';
+  pickedProfileColor = profileData.avatarColor || '#FF4D1C';
+
+  const prev = document.getElementById('prof-avatar-preview');
+  prev.textContent = pickedProfileEmoji || (me.fullname || me.username || 'U')[0].toUpperCase();
+  prev.style.background = pickedProfileColor;
+  prev.style.fontSize = pickedProfileEmoji ? '32px' : '26px';
+
+  document.getElementById('prof-displayname').value = profileData.displayName || me.fullname || '';
+  document.getElementById('prof-bio').value = profileData.bio || '';
+
+  document.getElementById('prof-emoji-grid').innerHTML = AVATAR_EMOJIS.map(function(em) {
+    return '<button type="button" class="prof-emoji-btn ' + (pickedProfileEmoji === em ? 'sel' : '') + '" onclick="pickProfileEmoji(this,\'' + em + '\')">' + em + '</button>';
+  }).join('');
+
+  document.getElementById('prof-color-grid').innerHTML = AVATAR_COLORS.map(function(c) {
+    return '<button type="button" class="prof-color-btn ' + (pickedProfileColor === c ? 'sel' : '') + '" style="background:' + c + ';" onclick="pickProfileColor(this,\'' + c + '\')"></button>';
+  }).join('');
+
+  openModal('modal-profile');
+}
+
+function pickProfileEmoji(btn, em) {
+  document.querySelectorAll('.prof-emoji-btn').forEach(function(b) { b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  pickedProfileEmoji = em;
+  const prev = document.getElementById('prof-avatar-preview');
+  prev.textContent = em;
+  prev.style.fontSize = '32px';
+  prev.style.background = pickedProfileColor;
+}
+
+function pickProfileColor(btn, c) {
+  document.querySelectorAll('.prof-color-btn').forEach(function(b) { b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  pickedProfileColor = c;
+  document.getElementById('prof-avatar-preview').style.background = c;
+}
+
+function saveProfile() {
+  profileData = {
+    displayName: document.getElementById('prof-displayname').value.trim(),
+    bio: document.getElementById('prof-bio').value.trim(),
+    avatarEmoji: pickedProfileEmoji,
+    avatarColor: pickedProfileColor
+  };
+  localStorage.setItem('sm_profile', JSON.stringify(profileData));
+  applyProfile();
+  closeModal('modal-profile');
+  showToast('บันทึกโปรไฟล์สำเร็จ ✓');
+}
+
+function resetForm() {
+  document.getElementById('post-form').reset();
+  document.querySelectorAll('.sport-btn').forEach(b => b.classList.remove('sel'));
+  pickedSport = ''; document.getElementById('p-sport').value = '';
+  postLat = null; postLng = null;
+  document.getElementById('gps-coords').style.display = 'none';
+  const g = document.getElementById('gps-btn');
+  g.textContent = '📡 GPS'; g.classList.remove('active');
+  const dt = new Date(Date.now()+3600000);
+  dt.setSeconds(0,0);
+  document.getElementById('p-datetime').value = dt.toISOString().slice(0,16);
+  clearSuggestions();
+  document.getElementById('post-map-container').style.display = 'none';
+  if (postPreviewMap) { postPreviewMap.remove(); postPreviewMap = null; postPreviewMarker = null; }
+}
+</script>
+</body>
+</html>
