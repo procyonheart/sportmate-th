@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="นโยบายความเป็นส่วนตัว SportMate TH — ข้อมูลที่เราเก็บและวิธีที่เราใช้ข้อมูลของคุณ">
+  <meta property="og:title" content="นโยบายความเป็นส่วนตัว — SportMate TH">
+  <meta property="og:description" content="ข้อมูลที่เราเก็บและวิธีที่เราใช้ข้อมูลของคุณ">
+  <meta property="og:url" content="https://procyonheart.github.io/sportmate-th/privacy.html">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://procyonheart.github.io/sportmate-th/privacy.html">
+  <title>นโยบายความเป็นส่วนตัว — SportMate TH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@700;900&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #FF4D1C;
+      --bg: #0F0F0F;
+      --surface: #1A1A1A;
+      --border: rgba(255,255,255,0.08);
+      --text: #F5F5F5;
+      --muted: #A0A0A0;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.8;
+      font-size: 15px;
+    }
+
+    /* Nav */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15,15,15,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+    }
+
+    .nav-brand-text {
+      font-family: 'Kanit', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -0.04em;
+      color: var(--text);
+    }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-family: 'Sarabun', sans-serif;
+      transition: color 0.2s;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .nav-back:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    /* Content */
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    .page-header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-header h1 {
+      font-family: 'Kanit', sans-serif;
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+
+    .page-header h1 span { color: var(--primary); }
+
+    .page-header .updated {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section h2 {
+      font-family: 'Kanit', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 20px;
+      background: var(--primary);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .section p {
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .section ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section ul li {
+      color: var(--muted);
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .section ul li::before {
+      content: '–';
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* Card highlight */
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-top: 16px;
+    }
+
+    .info-card p { margin: 0; color: var(--muted); font-size: 14px; }
+    .info-card strong { color: var(--text); }
+
+    /* Divider */
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 40px 0;
+    }
+
+    /* Contact */
+    .contact-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .contact-link:hover { text-decoration: underline; }
+
+    /* Footer */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+    }
+
+    footer p { font-size: 13px; color: var(--muted); }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="index.html" class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navGrad" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FF6B35"/><stop offset="1" stop-color="#CC2200"/>
+          </linearGradient>
+        </defs>
+        <path d="M10 40 L28 5 L52 5 L70 40 L52 75 L28 75 Z" fill="url(#navGrad)"/>
+        <polygon points="50,12 27,44 43,44 20,68 53,36 37,36" fill="white"/>
+      </svg>
+      <span class="nav-brand-text">SPORT<span style="color:#FF4D1C;">MATE</span></span>
+      <span style="background:#FF4D1C;color:white;font-family:'Kanit',sans-serif;font-size:10px;font-weight:900;padding:2px 6px;border-radius:3px;letter-spacing:0.05em;">TH</span>
+    </a>
+    <a href="index.html" class="nav-back">← กลับหน้าหลัก</a>
+  </nav>
+
+  <!-- Content -->
+  <main class="container">
+
+    <div class="page-header">
+      <h1>นโยบาย<span>ความเป็น</span><br>ส่วนตัว</h1>
+      <p class="updated">อัปเดตล่าสุด: 10 พฤษภาคม 2568</p>
+    </div>
+
+    <div class="section">
+      <p>SportMate TH ("เรา", "ของเรา") ให้ความสำคัญกับความเป็นส่วนตัวของคุณ นโยบายนี้อธิบายข้อมูลที่เราเก็บรวบรวม วิธีที่เราใช้ และสิทธิ์ของคุณในฐานะผู้ใช้บริการ</p>
+    </div>
+
+    <div class="section">
+      <h2>ข้อมูลที่เราเก็บรวบรวม</h2>
+      <p>เราเก็บข้อมูลจากคุณในสองกรณีหลัก:</p>
+      <ul>
+        <li><strong>การสมัครสมาชิก</strong> — ชื่อ, อีเมล, รหัสผ่าน (เข้ารหัสก่อนบันทึก), กีฬาที่สนใจ</li>
+        <li><strong>การสร้างโพสกิจกรรม</strong> — ชนิดกีฬา, วันเวลา, สถานที่, จำนวนผู้ร่วม, รายละเอียดกิจกรรม</li>
+        <li><strong>ข้อมูลตำแหน่ง (GPS)</strong> — ใช้เฉพาะเมื่อคุณอนุญาตในเบราว์เซอร์ เพื่อแสดงกิจกรรมใกล้คุณ</li>
+      </ul>
+
+      <div class="info-card">
+        <p><strong>หมายเหตุ:</strong> เราไม่เก็บรหัสผ่านในรูปแบบที่อ่านได้ — รหัสผ่านจะถูกเข้ารหัสด้วย SHA-256 ก่อนส่งข้อมูล</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>วิธีที่เราจัดเก็บข้อมูล</h2>
+      <p>ข้อมูลทั้งหมดถูกส่งผ่าน <strong>Google Apps Script</strong> และจัดเก็บใน <strong>Google Sheets</strong> ซึ่งเป็นบริการของ Google LLC ที่มีมาตรฐานความปลอดภัยระดับสูง</p>
+      <ul>
+        <li>ข้อมูลถูกส่งผ่านการเชื่อมต่อ HTTPS (เข้ารหัสระหว่างส่ง)</li>
+        <li>เฉพาะทีมงาน SportMate TH เท่านั้นที่เข้าถึง Google Sheets ได้</li>
+        <li>เราไม่ขายหรือแบ่งปันข้อมูลของคุณให้บุคคลภายนอก</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>วิธีที่เราใช้ข้อมูล</h2>
+      <ul>
+        <li>แสดงกิจกรรมและผู้ใช้ที่อยู่ใกล้คุณบนแผนที่</li>
+        <li>จับคู่คุณกับผู้ใช้ที่สนใจกีฬาชนิดเดียวกัน</li>
+        <li>ยืนยันตัวตนเมื่อคุณเข้าสู่ระบบ</li>
+        <li>ปรับปรุงบริการและแก้ไขข้อผิดพลาด</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>การใช้คุกกี้และ Local Storage</h2>
+      <p>เราใช้ <strong>localStorage</strong> ของเบราว์เซอร์เพื่อจัดเก็บ session ของคุณ (ชื่อผู้ใช้, กีฬาที่เลือก) หลังเข้าสู่ระบบ โดย session จะหมดอายุอัตโนมัติภายใน 7 วัน</p>
+      <ul>
+        <li>ไม่มีคุกกี้ติดตาม (tracking cookies)</li>
+        <li>ไม่มีโฆษณาติดตามพฤติกรรม</li>
+      </ul>
+    </div>
+
+    <hr>
+
+    <div class="section">
+      <h2>สิทธิ์ของคุณ</h2>
+      <p>คุณมีสิทธิ์ในการ:</p>
+      <ul>
+        <li>ขอดูข้อมูลที่เราเก็บเกี่ยวกับคุณ</li>
+        <li>ขอให้แก้ไขข้อมูลที่ไม่ถูกต้อง</li>
+        <li>ขอให้ลบข้อมูลทั้งหมดของคุณออกจากระบบ</li>
+      </ul>
+      <div class="info-card">
+        <p>หากต้องการใช้สิทธิ์เหล่านี้ ติดต่อเราได้ที่ <a href="mailto:8077232@crma.ac.th" class="contact-link">8077232@crma.ac.th</a> เราจะดำเนินการภายใน 7 วันทำการ</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>การเปลี่ยนแปลงนโยบาย</h2>
+      <p>เราอาจอัปเดตนโยบายนี้เป็นครั้งคราว หากมีการเปลี่ยนแปลงสำคัญ เราจะแจ้งให้ทราบผ่านหน้าเว็บไซต์ วันที่ "อัปเดตล่าสุด" ที่ด้านบนจะถูกเปลี่ยนทุกครั้งที่มีการแก้ไข</p>
+    </div>
+
+    <div class="section">
+      <h2>ติดต่อเรา</h2>
+      <p>หากมีคำถามเกี่ยวกับนโยบายนี้ ติดต่อเราได้ที่:</p>
+      <div class="info-card">
+        <p><strong>SportMate TH</strong><br>
+        อีเมล: <a href="mailto:8077232@crma.ac.th" class="contact-link">8077232@crma.ac.th</a><br>
+        เว็บไซต์: <a href="index.html" class="contact-link">sportmate-th</a></p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 SportMate TH — <a href="index.html">หน้าหลัก</a> · <a href="privacy.html">นโยบายความเป็นส่วนตัว</a></p>
+  </footer>
+
+</body>
+</html>

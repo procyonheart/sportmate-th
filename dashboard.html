@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="หาเพื่อนออกกำลังกายใกล้คุณ — SportMate TH">
+  <link rel="canonical" href="https://procyonheart.github.io/sportmate-th/dashboard.html">
   <title>หาเพื่อนกีฬา — SportMate TH</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;900&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
@@ -44,7 +47,7 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 20px;
     }
-    .nav-logo { display:flex; align-items:center; gap:8px; text-decoration:none; }
+    .nav-logo { display:flex; align-items:center; gap:8px; text-decoration:none; white-space:nowrap; }
     .nav-logo-text { font-family:'Kanit',sans-serif; font-weight:900; font-size:17px; color:var(--text); letter-spacing:-0.02em; }
     .nav-user { display:flex; align-items:center; gap:10px; }
     .nav-avatar {
@@ -97,9 +100,20 @@
     .dist-select option { background:#1A1A1A; }
 
     .filter-row {
-      display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:2px 0;
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
+      scrollbar-width: none;
+      padding: 2px 0 6px;
+      width: 100%;
     }
     .filter-row::-webkit-scrollbar { display:none; }
+    .filter-row-inner {
+      display: inline-flex;
+      gap: 6px;
+      white-space: nowrap;
+    }
     .chip {
       flex-shrink:0; padding:5px 14px; border-radius:50px;
       background: rgba(8,8,8,0.78); backdrop-filter:blur(12px);
@@ -273,6 +287,38 @@
     .btn-gps:hover { background:rgba(29,185,84,0.2); }
     .btn-gps.active { background:rgba(29,185,84,0.22); border-color:rgba(29,185,84,0.55); }
 
+    .priv-btn {
+      flex:1; padding:9px 12px; border-radius:10px; border:1.5px solid var(--border);
+      background:rgba(255,255,255,0.04); color:var(--muted);
+      font-family:'Sarabun',sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+      transition:background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .priv-btn.active { background:rgba(255,77,28,0.14); border-color:rgba(255,77,28,0.5); color:var(--primary); }
+    .priv-btn:hover:not(.active) { background:rgba(255,255,255,0.08); color:var(--text); }
+
+    .member-chip {
+      display:inline-flex; align-items:center; gap:5px;
+      background:rgba(255,255,255,0.06); border:1px solid var(--border);
+      border-radius:50px; padding:3px 10px 3px 6px; font-size:12px; color:var(--text);
+    }
+    .member-kick {
+      background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer; padding:0;
+      transition:color 0.15s;
+    }
+    .member-kick:hover { color:#FF4D1C; }
+    .btn-leave {
+      width:100%; padding:12px; margin-top:4px;
+      background:rgba(255,77,28,0.1); border:1.5px solid rgba(255,77,28,0.3);
+      color:#FF4D1C; border-radius:12px; font-family:'Kanit',sans-serif;
+      font-weight:700; font-size:14px; cursor:pointer;
+      transition:background 0.2s, border-color 0.2s;
+    }
+    .btn-leave:hover { background:rgba(255,77,28,0.2); border-color:rgba(255,77,28,0.55); }
+    .privacy-badge {
+      display:inline-flex; align-items:center; gap:3px;
+      font-size:10px; color:var(--muted); margin-left:4px;
+    }
+
     .btn-submit {
       width:100%; padding:14px;
       background: linear-gradient(135deg,var(--primary),var(--primary-light));
@@ -407,6 +453,14 @@
     }
     .prof-color-btn:hover { transform:scale(1.15); }
     .prof-color-btn.sel { border-color:white; transform:scale(1.2); }
+    .skill-btn {
+      padding:7px 14px; border-radius:10px; font-size:13px; cursor:pointer;
+      background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.1);
+      color:var(--muted); font-family:'Sarabun',sans-serif;
+      transition:background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .skill-btn:hover:not(.sel) { background:rgba(255,255,255,0.1); color:var(--text); }
+    .skill-btn.sel { background:rgba(255,77,28,0.15); border-color:rgba(255,77,28,0.5); color:var(--primary); }
     .nav-avatar { cursor:pointer; }
     .nav-avatar:hover { opacity:0.85; }
 
@@ -495,7 +549,7 @@
 <!-- ── NAV ───────────────────────────────────────────────────── -->
 <nav class="nav">
   <a href="index.html" class="nav-logo">
-    <span style="font-size:22px;">🏃</span>
+    <img src="brand_assets/icon.svg" style="width:30px;height:30px;" alt="SportMate TH">
     <span class="nav-logo-text">SportMate TH</span>
   </a>
   <div class="nav-user">
@@ -536,15 +590,21 @@
     </select>
   </div>
   <div class="filter-row">
-    <span class="chip active" onclick="setSportFilter('all',this)">ทั้งหมด</span>
-    <span class="chip" onclick="setSportFilter('วิ่ง',this)">🏃 วิ่ง</span>
-    <span class="chip" onclick="setSportFilter('ฟุตบอล',this)">⚽ ฟุตบอล</span>
-    <span class="chip" onclick="setSportFilter('โยคะ',this)">🧘 โยคะ</span>
-    <span class="chip" onclick="setSportFilter('มวยไทย',this)">🥊 มวย</span>
-    <span class="chip" onclick="setSportFilter('แบดมินตัน',this)">🏸 แบด</span>
-    <span class="chip" onclick="setSportFilter('ว่ายน้ำ',this)">🏊 ว่าย</span>
-    <span class="chip" onclick="setSportFilter('ปั่นจักรยาน',this)">🚴 จักรยาน</span>
-    <span class="chip" onclick="setSportFilter('ออกกำลังกาย',this)">🏋️ ฟิตเนส</span>
+    <div class="filter-row-inner">
+      <span class="chip active" onclick="setSportFilter('all',this)">ทั้งหมด</span>
+      <span class="chip" onclick="setSportFilter('วิ่ง',this)">🏃 วิ่ง</span>
+      <span class="chip" onclick="setSportFilter('ฟุตบอล',this)">⚽ ฟุตบอล</span>
+      <span class="chip" onclick="setSportFilter('โยคะ',this)">🧘 โยคะ</span>
+      <span class="chip" onclick="setSportFilter('มวยไทย',this)">🥊 มวย</span>
+      <span class="chip" onclick="setSportFilter('แบดมินตัน',this)">🏸 แบด</span>
+      <span class="chip" onclick="setSportFilter('ว่ายน้ำ',this)">🏊 ว่าย</span>
+      <span class="chip" onclick="setSportFilter('ปั่นจักรยาน',this)">🚴 จักรยาน</span>
+      <span class="chip" onclick="setSportFilter('ออกกำลังกาย',this)">🏋️ ฟิตเนส</span>
+      <span class="chip" onclick="setSportFilter('กอล์ฟ',this)">⛳ กอล์ฟ</span>
+      <span class="chip" onclick="setSportFilter('บาสเกตบอล',this)">🏀 บาส</span>
+      <span class="chip" onclick="setSportFilter('วอลเลย์บอล',this)">🏐 วอลเลย์</span>
+      <span class="chip" onclick="setSportFilter('เทนนิส',this)">🎾 เทนนิส</span>
+    </div>
   </div>
 </div>
 
@@ -645,9 +705,19 @@
         </div>
 
         <!-- รายละเอียด -->
-        <div style="margin-bottom:20px;">
+        <div style="margin-bottom:16px;">
           <label class="flabel">รายละเอียด (ไม่บังคับ)</label>
           <textarea id="p-desc" class="ftextarea" placeholder="เช่น นัดเจอที่ประตูหน้า มือใหม่ยินดีต้อนรับ"></textarea>
+        </div>
+
+        <!-- ความเป็นส่วนตัว -->
+        <div style="margin-bottom:20px;">
+          <label class="flabel">ความเป็นส่วนตัว</label>
+          <div style="display:flex;gap:8px;">
+            <button type="button" id="priv-public" class="priv-btn active" onclick="setPrivacy('public',this)">🌐 สาธารณะ</button>
+            <button type="button" id="priv-private" class="priv-btn" onclick="setPrivacy('private',this)">🔒 ส่วนตัว (เฉพาะฉัน)</button>
+          </div>
+          <input type="hidden" id="p-privacy" value="public">
         </div>
 
         <button type="submit" id="post-btn" class="btn-submit">
@@ -682,20 +752,128 @@
     </div>
     <div class="modal-div"></div>
     <div class="modal-body">
-      <div id="prof-avatar-preview" class="prof-avatar-preview"></div>
-      <label class="flabel">เลือก Avatar</label>
+
+      <!-- Avatar + photo upload row -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:18px;">
+        <div style="position:relative;">
+          <div id="prof-avatar-preview" class="prof-avatar-preview" style="position:relative;overflow:hidden;"></div>
+          <img id="prof-photo-preview" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <label for="prof-photo-input" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:7px 14px;font-size:13px;color:#A0A0A0;cursor:pointer;transition:background 0.2s;"
+            onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">
+            📸 อัปโหลดรูปโปรไฟล์
+          </label>
+          <input id="prof-photo-input" type="file" accept="image/*" style="display:none;" onchange="handlePhotoUpload(this)">
+          <button type="button" id="prof-photo-remove" style="display:none;background:rgba(255,77,28,0.1);border:1px solid rgba(255,77,28,0.2);border-radius:10px;padding:7px 12px;font-size:13px;color:#FF4D1C;cursor:pointer;" onclick="removePhoto()">ลบรูป</button>
+        </div>
+      </div>
+
+      <label class="flabel">เลือก Avatar (ใช้เมื่อไม่มีรูปโปรไฟล์)</label>
       <div id="prof-emoji-grid" class="prof-emoji-grid"></div>
       <label class="flabel">สีพื้นหลัง</label>
       <div id="prof-color-grid" class="prof-color-grid" style="margin-bottom:18px;"></div>
+
       <div style="margin-bottom:14px;">
         <label class="flabel">ชื่อที่แสดง</label>
         <input id="prof-displayname" class="finput" type="text" placeholder="ชื่อของคุณ">
       </div>
-      <div style="margin-bottom:20px;">
+      <div style="margin-bottom:14px;">
         <label class="flabel">Bio (ไม่บังคับ)</label>
         <textarea id="prof-bio" class="ftextarea" placeholder="เล่าให้ฟังว่าคุณชอบกีฬาอะไร..." style="min-height:70px;"></textarea>
       </div>
+
+      <!-- Extra profile fields -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div>
+          <label class="flabel">อายุ</label>
+          <input id="prof-age" class="finput" type="number" min="13" max="80" placeholder="ปี">
+        </div>
+        <div>
+          <label class="flabel">เพศ</label>
+          <select id="prof-gender" class="finput" style="cursor:pointer;">
+            <option value="">ไม่ระบุ</option>
+            <option value="ชาย">ชาย</option>
+            <option value="หญิง">หญิง</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="flabel">ระดับฝีมือ</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <button type="button" class="skill-btn" onclick="pickSkill(this,'มือใหม่')">🌱 มือใหม่</button>
+          <button type="button" class="skill-btn" onclick="pickSkill(this,'กลาง')">💪 ระดับกลาง</button>
+          <button type="button" class="skill-btn" onclick="pickSkill(this,'เชี่ยวชาญ')">🏆 เชี่ยวชาญ</button>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="flabel">จังหวัด / พื้นที่</label>
+        <input id="prof-province" class="finput" type="text" placeholder="เช่น กรุงเทพฯ, เชียงใหม่">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label class="flabel">ช่วงเวลาที่ว่าง</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="avail-cb" value="เช้า (06–09)"> 🌅 เช้า</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="avail-cb" value="กลางวัน (11–13)"> ☀️ กลางวัน</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="avail-cb" value="เย็น (17–20)"> 🌆 เย็น</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="avail-cb" value="วันหยุด"> 📅 วันหยุด</label>
+        </div>
+      </div>
+
+      <!-- ID Verification badge -->
+      <div id="id-verify-section" style="margin-bottom:20px;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#F5F5F5;margin-bottom:2px;">ยืนยันตัวตน</div>
+            <div id="id-verify-badge" style="font-size:12px;color:#A0A0A0;"></div>
+          </div>
+          <button type="button" id="id-verify-btn" onclick="openIdVerify()"
+            style="background:rgba(255,77,28,0.12);border:1px solid rgba(255,77,28,0.25);color:#FF4D1C;padding:7px 14px;border-radius:9px;font-size:13px;cursor:pointer;font-family:'Sarabun',sans-serif;transition:background 0.2s;"
+            onmouseover="this.style.background='rgba(255,77,28,0.22)'" onmouseout="this.style.background='rgba(255,77,28,0.12)'">
+            ยืนยันตัวตน →
+          </button>
+        </div>
+      </div>
+
       <button type="button" class="btn-submit" onclick="saveProfile()">บันทึกโปรไฟล์ ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ID VERIFY MODAL ──────────────────────────────────────────── -->
+<div class="modal-ov" id="modal-id-verify" onclick="ovClick(event,'modal-id-verify')">
+  <div class="modal-card">
+    <span class="modal-pill-bar"></span>
+    <div class="modal-hd">
+      <span class="modal-title">🆔 ยืนยันตัวตน</span>
+      <button class="modal-x" onclick="closeModal('modal-id-verify')">✕</button>
+    </div>
+    <div class="modal-div"></div>
+    <div class="modal-body">
+      <div style="background:rgba(255,184,0,0.08);border:1px solid rgba(255,184,0,0.2);border-radius:12px;padding:12px 16px;font-size:13px;color:#FFB800;margin-bottom:20px;line-height:1.6;">
+        🔒 ข้อมูลของคุณจะถูกส่งไปยังทีมงานเพื่อตรวจสอบเท่านั้น ไม่เผยแพร่ต่อสาธารณะ
+      </div>
+      <div style="margin-bottom:16px;">
+        <label class="flabel">1. รูปบัตรประชาชน (หน้าหน้า)</label>
+        <label for="id-card-input" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed rgba(255,255,255,0.12);border-radius:14px;padding:24px;cursor:pointer;transition:border-color 0.2s;"
+          onmouseover="this.style.borderColor='rgba(255,77,28,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'">
+          <span style="font-size:32px;">🪪</span>
+          <span id="id-card-label" style="font-size:13px;color:#A0A0A0;">คลิกเพื่อเลือกรูปบัตร</span>
+        </label>
+        <input id="id-card-input" type="file" accept="image/*" style="display:none;" onchange="setIdLabel(this,'id-card-label')">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label class="flabel">2. Selfie ถือบัตรประชาชน</label>
+        <label for="selfie-input" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed rgba(255,255,255,0.12);border-radius:14px;padding:24px;cursor:pointer;transition:border-color 0.2s;"
+          onmouseover="this.style.borderColor='rgba(255,77,28,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'">
+          <span style="font-size:32px;">🤳</span>
+          <span id="selfie-label" style="font-size:13px;color:#A0A0A0;">คลิกเพื่อถ่ายหรือเลือกรูปเซลฟี่</span>
+        </label>
+        <input id="selfie-input" type="file" accept="image/*" capture="user" style="display:none;" onchange="setIdLabel(this,'selfie-label')">
+      </div>
+      <div id="id-verify-error" style="display:none;font-size:13px;color:#FF4D1C;margin-bottom:12px;"></div>
+      <button type="button" class="btn-submit" onclick="submitIdVerify()">ส่งคำขอยืนยันตัวตน</button>
     </div>
   </div>
 </div>
@@ -778,6 +956,20 @@ function showToast(msg, isErr) {
   t.classList.add('show');
   setTimeout(function() { t.classList.remove('show'); }, 3500);
 }
+
+// ─── Filter row drag/touch scroll ────────────────────────────
+(function() {
+  const row = document.querySelector('.filter-row');
+  if (!row) return;
+  // Stop Leaflet from stealing touch events on this element
+  row.addEventListener('touchstart', function(e) { e.stopPropagation(); }, { passive: true });
+  row.addEventListener('touchmove', function(e) { e.stopPropagation(); }, { passive: true });
+  // Mouse drag scroll (desktop)
+  let isDown = false, startX = 0, scrollLeft = 0;
+  row.addEventListener('mousedown', function(e) { isDown = true; startX = e.pageX - row.getBoundingClientRect().left; scrollLeft = row.scrollLeft; row.style.cursor = 'grabbing'; });
+  document.addEventListener('mouseup', function() { isDown = false; row.style.cursor = ''; });
+  document.addEventListener('mousemove', function(e) { if (!isDown) return; e.preventDefault(); const x = e.pageX - row.getBoundingClientRect().left; row.scrollLeft = scrollLeft - (x - startX); });
+})();
 
 // ─── Map ─────────────────────────────────────────────────────
 function initMap() {
@@ -899,6 +1091,9 @@ function getFiltered() {
     list = allActivities;
   }
 
+  // กรองโพสส่วนตัวให้เห็นเฉพาะเจ้าของ
+  list = list.filter(a => a.privacy !== 'private' || a.username === me.username);
+
   if (activeSport !== 'all')
     list = list.filter(a => a.sport && a.sport.includes(activeSport));
 
@@ -967,7 +1162,7 @@ function renderFeed(list) {
       </div>
       <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:12px;color:#A0A0A0;">🕐 ${dtS}</span>
-        <span style="font-size:12px;color:#505050;">@${uname}${isMine?' <span style="color:var(--primary);font-size:10px;">• โพสของฉัน</span>':''}</span>
+        <span style="font-size:12px;color:#505050;">@${uname}${isMine?' <span style="color:var(--primary);font-size:10px;">• โพสของฉัน</span>':''}${a.privacy==='private'?' <span class="privacy-badge">🔒</span>':''}</span>
       </div>
       ${desc?`<div style="margin-top:5px;font-size:12px;color:#606060;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${desc}</div>`:''}
     </div>`;
@@ -1034,14 +1229,49 @@ function showDetail(id) {
       <div class="info-text">โพสโดย <strong>@${uname}</strong></div>
     </div>
     ${desc?`<div class="detail-desc">"${desc}"</div>`:''}
+    ${a.privacy==='private'?`<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:10px;font-size:12px;color:var(--muted);margin-bottom:4px;">🔒 กิจกรรมส่วนตัว — มองเห็นเฉพาะคุณ</div>`:''}
     ${isMine
-      ? `<div style="padding:12px;background:rgba(255,77,28,0.08);border:1px solid rgba(255,77,28,0.2);border-radius:12px;font-size:13px;color:var(--muted);text-align:center;">นี่คือกิจกรรมของคุณ</div>`
-      : `<button class="btn-join" onclick="joinActivity('${aid}')">สนใจร่วมกิจกรรม 🏃</button>`
+      ? `<div style="padding:12px;background:rgba(255,77,28,0.08);border:1px solid rgba(255,77,28,0.2);border-radius:12px;font-size:13px;color:var(--muted);text-align:center;margin-bottom:10px;">นี่คือกิจกรรมของคุณ</div>
+         <div id="members-section">
+           ${renderMembersSection(aid)}
+         </div>`
+      : (() => {
+          const joined = JSON.parse(localStorage.getItem('sm_joined')||'{}');
+          return joined[aid]
+            ? `<button class="btn-leave" onclick="leaveActivity('${aid}')">ออกจากกิจกรรม ✕</button>`
+            : `<button class="btn-join" onclick="joinActivity('${aid}')">สนใจร่วมกิจกรรม 🏃</button>`;
+        })()
     }
   `;
 
   openModal('modal-detail');
   if (a.lat && a.lng && map) map.flyTo([a.lat, a.lng], 15, { duration:1 });
+}
+
+function renderMembersSection(aid) {
+  const joiners = JSON.parse(localStorage.getItem('sm_activity_joiners') || '{}');
+  const list = joiners[aid] || [];
+  if (!list.length) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0;">ยังไม่มีสมาชิกเข้าร่วม</div>`;
+  return `
+    <div style="margin-bottom:6px;font-size:12px;color:var(--muted);font-weight:600;">สมาชิกที่เข้าร่วม (${list.length} คน)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${list.map(u=>`
+        <span class="member-chip">
+          <span>@${escapeHtml(u)}</span>
+          <button class="member-kick" onclick="kickMember('${escapeHtml(aid)}','${escapeHtml(u)}')" title="นำออก">✕</button>
+        </span>
+      `).join('')}
+    </div>`;
+}
+
+function kickMember(activityId, username) {
+  const joiners = JSON.parse(localStorage.getItem('sm_activity_joiners') || '{}');
+  if (!joiners[activityId]) return;
+  joiners[activityId] = joiners[activityId].filter(u => u !== username);
+  localStorage.setItem('sm_activity_joiners', JSON.stringify(joiners));
+  const sec = document.getElementById('members-section');
+  if (sec) sec.innerHTML = renderMembersSection(activityId);
+  showToast('นำสมาชิกออกแล้ว');
 }
 
 function joinActivity(id) {
@@ -1054,6 +1284,11 @@ function joinActivity(id) {
   joined[id] = { ...a, joined_at: Date.now() };
   localStorage.setItem('sm_joined', JSON.stringify(joined));
 
+  const joiners = JSON.parse(localStorage.getItem('sm_activity_joiners') || '{}');
+  if (!joiners[id]) joiners[id] = [];
+  if (!joiners[id].includes(me.username)) joiners[id].push(me.username);
+  localStorage.setItem('sm_activity_joiners', JSON.stringify(joiners));
+
   fetch(APPS_SCRIPT_URL, {
     method: 'POST', headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({ action:'joinActivity', activity_id:id, joiner_username:me.username, creator_username:a.username })
@@ -1061,6 +1296,27 @@ function joinActivity(id) {
 
   showToast('เข้าร่วมกิจกรรมสำเร็จ! ✓');
   closeModal('modal-detail');
+}
+
+function leaveActivity(id) {
+  const joined = JSON.parse(localStorage.getItem('sm_joined') || '{}');
+  delete joined[id];
+  localStorage.setItem('sm_joined', JSON.stringify(joined));
+
+  const joiners = JSON.parse(localStorage.getItem('sm_activity_joiners') || '{}');
+  if (joiners[id]) {
+    joiners[id] = joiners[id].filter(u => u !== me.username);
+    localStorage.setItem('sm_activity_joiners', JSON.stringify(joiners));
+  }
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST', headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action:'leaveActivity', activity_id:id, username:me.username })
+  }).catch(() => {});
+
+  showToast('ออกจากกิจกรรมแล้ว');
+  closeModal('modal-detail');
+  if (currentTab === 'joined') applyFilters();
 }
 
 // ─── Notifications ───────────────────────────────────────────
@@ -1192,6 +1448,13 @@ function ovClick(e, id) { if (e.target === document.getElementById(id)) closeMod
 
 function openCreateModal() { openModal('modal-create'); }
 
+// ─── Privacy selector ────────────────────────────────────────
+function setPrivacy(val, el) {
+  document.querySelectorAll('.priv-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('p-privacy').value = val;
+}
+
 // ─── Sport selector ───────────────────────────────────────────
 function pickSport(btn) {
   document.querySelectorAll('.sport-btn').forEach(b => b.classList.remove('sel'));
@@ -1219,7 +1482,8 @@ async function handlePost(e) {
 
   const payload = {
     action:'postActivity', username:me.username, sport, location_name:loc,
-    lat:postLat, lng:postLng, datetime:dt, description:desc, max_people:parseInt(mp)
+    lat:postLat, lng:postLng, datetime:dt, description:desc, max_people:parseInt(mp),
+    privacy: document.getElementById('p-privacy').value
   };
 
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
@@ -1345,28 +1609,65 @@ function loadProfile() {
 
 function applyProfile() {
   const avatar = document.getElementById('user-avatar');
-  if (profileData.avatarEmoji) {
+  if (profileData.photoBase64) {
+    avatar.textContent = '';
+    avatar.style.backgroundImage = 'url(' + profileData.photoBase64 + ')';
+    avatar.style.backgroundSize = 'cover';
+    avatar.style.backgroundPosition = 'center';
+    avatar.style.background = '';
+    avatar.style.fontSize = '';
+  } else if (profileData.avatarEmoji) {
+    avatar.style.backgroundImage = '';
     avatar.textContent = profileData.avatarEmoji;
     avatar.style.fontSize = '20px';
     avatar.style.background = profileData.avatarColor || '#FF4D1C';
   } else {
+    avatar.style.backgroundImage = '';
     avatar.textContent = (me.fullname || me.username || 'U')[0].toUpperCase();
     avatar.style.fontSize = '';
     avatar.style.background = 'linear-gradient(135deg,var(--primary),#FFB800)';
   }
 }
 
+let pickedSkill = '';
+
 function openProfile() {
   pickedProfileEmoji = profileData.avatarEmoji || '';
   pickedProfileColor = profileData.avatarColor || '#FF4D1C';
+  pickedSkill = profileData.skillLevel || '';
 
+  // Photo preview
+  const photoPreview = document.getElementById('prof-photo-preview');
   const prev = document.getElementById('prof-avatar-preview');
-  prev.textContent = pickedProfileEmoji || (me.fullname || me.username || 'U')[0].toUpperCase();
+  if (profileData.photoBase64) {
+    photoPreview.src = profileData.photoBase64;
+    photoPreview.style.display = 'block';
+    prev.textContent = '';
+    document.getElementById('prof-photo-remove').style.display = 'inline-block';
+  } else {
+    photoPreview.style.display = 'none';
+    prev.textContent = pickedProfileEmoji || (me.fullname || me.username || 'U')[0].toUpperCase();
+    document.getElementById('prof-photo-remove').style.display = 'none';
+  }
   prev.style.background = pickedProfileColor;
-  prev.style.fontSize = pickedProfileEmoji ? '32px' : '26px';
+  prev.style.fontSize = (pickedProfileEmoji && !profileData.photoBase64) ? '32px' : '26px';
 
   document.getElementById('prof-displayname').value = profileData.displayName || me.fullname || '';
   document.getElementById('prof-bio').value = profileData.bio || '';
+  document.getElementById('prof-age').value = profileData.age || '';
+  document.getElementById('prof-gender').value = profileData.gender || me.gender || '';
+  document.getElementById('prof-province').value = profileData.province || me.province || '';
+
+  // Skill buttons
+  document.querySelectorAll('.skill-btn').forEach(function(b) {
+    b.classList.toggle('sel', b.textContent.includes(pickedSkill) && pickedSkill);
+  });
+
+  // Availability checkboxes
+  const avail = profileData.availability || [];
+  document.querySelectorAll('.avail-cb').forEach(function(cb) {
+    cb.checked = avail.includes(cb.value);
+  });
 
   document.getElementById('prof-emoji-grid').innerHTML = AVATAR_EMOJIS.map(function(em) {
     return '<button type="button" class="prof-emoji-btn ' + (pickedProfileEmoji === em ? 'sel' : '') + '" onclick="pickProfileEmoji(this,\'' + em + '\')">' + em + '</button>';
@@ -1375,6 +1676,21 @@ function openProfile() {
   document.getElementById('prof-color-grid').innerHTML = AVATAR_COLORS.map(function(c) {
     return '<button type="button" class="prof-color-btn ' + (pickedProfileColor === c ? 'sel' : '') + '" style="background:' + c + ';" onclick="pickProfileColor(this,\'' + c + '\')"></button>';
   }).join('');
+
+  // ID Verify badge
+  const idStatus = me.id_verify_status || profileData.idVerifyStatus || 'unverified';
+  const badgeEl = document.getElementById('id-verify-badge');
+  const btnEl   = document.getElementById('id-verify-btn');
+  if (idStatus === 'approved') {
+    badgeEl.innerHTML = '<span style="color:#1DB954;">✓ ยืนยันตัวตนแล้ว</span>';
+    btnEl.style.display = 'none';
+  } else if (idStatus === 'pending') {
+    badgeEl.innerHTML = '<span style="color:#FFB800;">🕐 รอการตรวจสอบ</span>';
+    btnEl.style.display = 'none';
+  } else {
+    badgeEl.innerHTML = '<span style="color:#A0A0A0;">🔒 ยังไม่ยืนยัน</span>';
+    btnEl.style.display = 'inline-block';
+  }
 
   openModal('modal-profile');
 }
@@ -1396,13 +1712,119 @@ function pickProfileColor(btn, c) {
   document.getElementById('prof-avatar-preview').style.background = c;
 }
 
+function pickSkill(btn, skill) {
+  document.querySelectorAll('.skill-btn').forEach(function(b) { b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  pickedSkill = skill;
+}
+
+function handlePhotoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const max = 200;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > max) { h = h * max / w; w = max; } }
+      else        { if (h > max) { w = w * max / h; h = max; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', 0.7);
+      profileData.photoBase64 = b64;
+      document.getElementById('prof-photo-preview').src = b64;
+      document.getElementById('prof-photo-preview').style.display = 'block';
+      document.getElementById('prof-avatar-preview').textContent = '';
+      document.getElementById('prof-photo-remove').style.display = 'inline-block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto() {
+  delete profileData.photoBase64;
+  document.getElementById('prof-photo-preview').style.display = 'none';
+  document.getElementById('prof-photo-preview').src = '';
+  document.getElementById('prof-photo-remove').style.display = 'none';
+  document.getElementById('prof-photo-input').value = '';
+  const prev = document.getElementById('prof-avatar-preview');
+  prev.textContent = pickedProfileEmoji || (me.fullname || me.username || 'U')[0].toUpperCase();
+  prev.style.fontSize = pickedProfileEmoji ? '32px' : '26px';
+}
+
+function setIdLabel(input, labelId) {
+  const el = document.getElementById(labelId);
+  if (input.files && input.files[0]) {
+    el.textContent = '✓ ' + input.files[0].name;
+    el.style.color = '#1DB954';
+  }
+}
+
+function openIdVerify() {
+  closeModal('modal-profile');
+  document.getElementById('id-verify-error').style.display = 'none';
+  openModal('modal-id-verify');
+}
+
+async function submitIdVerify() {
+  const idCard = document.getElementById('id-card-input').files[0];
+  const selfie = document.getElementById('selfie-input').files[0];
+  const errEl = document.getElementById('id-verify-error');
+
+  if (!idCard || !selfie) {
+    errEl.textContent = 'กรุณาอัปโหลดรูปบัตรประชาชนและเซลฟี่ให้ครบ';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#modal-id-verify .btn-submit');
+  btn.textContent = 'กำลังส่ง...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'submitIdVerify', email: me.email, username: me.username })
+    });
+    const data = await res.json();
+    if (data.success) {
+      profileData.idVerifyStatus = 'pending';
+      me.id_verify_status = 'pending';
+      localStorage.setItem('sm_user', JSON.stringify(me));
+      localStorage.setItem('sm_profile', JSON.stringify(profileData));
+      closeModal('modal-id-verify');
+      showToast('ส่งคำขอยืนยันตัวตนสำเร็จ รอทีมงานตรวจสอบ 🕐');
+    } else {
+      errEl.textContent = data.message || 'เกิดข้อผิดพลาด';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่';
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = 'ส่งคำขอยืนยันตัวตน';
+    btn.disabled = false;
+  }
+}
+
 function saveProfile() {
-  profileData = {
+  const availability = Array.from(document.querySelectorAll('.avail-cb:checked')).map(function(cb) { return cb.value; });
+  profileData = Object.assign(profileData || {}, {
     displayName: document.getElementById('prof-displayname').value.trim(),
     bio: document.getElementById('prof-bio').value.trim(),
     avatarEmoji: pickedProfileEmoji,
-    avatarColor: pickedProfileColor
-  };
+    avatarColor: pickedProfileColor,
+    age: document.getElementById('prof-age').value,
+    gender: document.getElementById('prof-gender').value,
+    province: document.getElementById('prof-province').value.trim(),
+    skillLevel: pickedSkill,
+    availability: availability
+  });
   localStorage.setItem('sm_profile', JSON.stringify(profileData));
   applyProfile();
   closeModal('modal-profile');
@@ -1413,6 +1835,9 @@ function resetForm() {
   document.getElementById('post-form').reset();
   document.querySelectorAll('.sport-btn').forEach(b => b.classList.remove('sel'));
   pickedSport = ''; document.getElementById('p-sport').value = '';
+  document.getElementById('p-privacy').value = 'public';
+  document.querySelectorAll('.priv-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('priv-public').classList.add('active');
   postLat = null; postLng = null;
   document.getElementById('gps-coords').style.display = 'none';
   const g = document.getElementById('gps-btn');

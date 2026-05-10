@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ยืนยันอีเมล — SportMate TH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@700;900&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #0F0F0F;
+      color: #F5F5F5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .noise-layer {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+    .blob1 { position:fixed;top:-200px;left:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(255,77,28,0.12),transparent 70%);pointer-events:none;z-index:0; }
+    .blob2 { position:fixed;bottom:-200px;right:-200px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(29,185,84,0.08),transparent 70%);pointer-events:none;z-index:0; }
+    .card {
+      position: relative; z-index: 1;
+      background: #1A1A1A;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 48px 40px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .logo { display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:36px;text-decoration:none; }
+    .logo-text { font-family:'Kanit',sans-serif;font-weight:900;font-size:22px;letter-spacing:-0.03em;color:#F5F5F5; }
+    .icon-wrap {
+      width: 80px; height: 80px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px; margin: 0 auto 24px;
+      transition: transform 0.3s;
+    }
+    .icon-wrap.loading { background: rgba(255,255,255,0.06); animation: pulse 1.5s ease-in-out infinite; }
+    .icon-wrap.success { background: linear-gradient(135deg,#1DB954,#00a846); box-shadow: 0 0 40px rgba(29,185,84,0.35); }
+    .icon-wrap.error   { background: linear-gradient(135deg,#FF4D1C,#e03000); box-shadow: 0 0 40px rgba(255,77,28,0.35); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    h1 { font-family:'Kanit',sans-serif;font-weight:900;font-size:24px;margin-bottom:12px;letter-spacing:-0.03em; }
+    p { font-size:15px;color:#A0A0A0;line-height:1.7;margin-bottom:28px; }
+    .btn {
+      display: inline-block; padding: 14px 32px; border-radius: 12px;
+      font-family:'Kanit',sans-serif;font-weight:700;font-size:16px;
+      text-decoration: none; cursor: pointer; border: none;
+      background: linear-gradient(135deg,#FF4D1C,#FFB800);
+      color: white; width: 100%;
+      box-shadow: 0 8px 24px rgba(255,77,28,0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255,77,28,0.45); }
+    .btn:active { transform: translateY(0); }
+    .btn-ghost {
+      display: inline-block; padding: 12px 24px; border-radius: 12px;
+      font-size:14px; text-decoration:none; cursor:pointer; border:none;
+      background: rgba(255,255,255,0.06); color: #A0A0A0; width:100%;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: background 0.2s, color 0.2s;
+      margin-top: 10px;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.1); color:#F5F5F5; }
+    #state-loading, #state-success, #state-error { display:none; }
+    #state-loading.active, #state-success.active, #state-error.active { display:block; }
+    .spinner { width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:#FF4D1C;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="noise-layer"></div>
+  <div class="blob1"></div>
+  <div class="blob2"></div>
+
+  <div class="card">
+    <a href="index.html" class="logo">
+      <img src="brand_assets/icon.svg" style="width:36px;height:36px;" alt="SportMate TH">
+      <span class="logo-text">SportMate TH</span>
+    </a>
+
+    <!-- Loading -->
+    <div id="state-loading" class="active">
+      <div class="spinner" style="margin-bottom:24px;"></div>
+      <h1>กำลังยืนยันอีเมล...</h1>
+      <p>กรุณารอสักครู่</p>
+    </div>
+
+    <!-- Success -->
+    <div id="state-success">
+      <div class="icon-wrap success">✓</div>
+      <h1>ยืนยันอีเมลสำเร็จ!</h1>
+      <p id="success-msg">บัญชีของคุณพร้อมใช้งานแล้ว มาหาเพื่อนออกกำลังกายกัน 💪</p>
+      <a href="login.html" class="btn">เข้าสู่ระบบเลย →</a>
+    </div>
+
+    <!-- Error -->
+    <div id="state-error">
+      <div class="icon-wrap error">✕</div>
+      <h1>ยืนยันไม่สำเร็จ</h1>
+      <p id="error-msg">ลิงก์ยืนยันไม่ถูกต้องหรือหมดอายุแล้ว</p>
+      <a href="index.html" class="btn">กลับหน้าหลัก</a>
+      <button class="btn-ghost" id="resend-btn" style="display:none;" onclick="showResend()">ส่งอีเมลยืนยันใหม่</button>
+    </div>
+  </div>
+
+  <!-- Resend overlay -->
+  <div id="resend-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:#1A1A1A;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:36px 32px;max-width:380px;width:100%;text-align:center;">
+      <h2 style="font-family:'Kanit',sans-serif;font-size:20px;margin-bottom:8px;">ส่งอีเมลยืนยันใหม่</h2>
+      <p style="font-size:14px;color:#A0A0A0;margin-bottom:20px;">กรอกอีเมลที่สมัครไว้</p>
+      <input id="resend-email" type="email" placeholder="your@email.com"
+        style="width:100%;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#F5F5F5;font-size:15px;margin-bottom:12px;outline:none;">
+      <div id="resend-msg" style="font-size:13px;color:#A0A0A0;margin-bottom:12px;min-height:18px;"></div>
+      <button onclick="doResend()" class="btn" style="margin-bottom:10px;">ส่งอีเมล</button>
+      <button onclick="document.getElementById('resend-overlay').style.display='none'" class="btn-ghost">ยกเลิก</button>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2ByyVNuhwblvpPQf-Rxryr4POeV-MXpxO_NPxUv-SeULIk1shuc2gsbrxCpl-pi_rgA/exec';
+
+    function setState(state) {
+      ['loading','success','error'].forEach(function(s) {
+        document.getElementById('state-' + s).classList.toggle('active', s === state);
+      });
+    }
+
+    async function verify() {
+      const token = new URLSearchParams(window.location.search).get('token');
+      if (!token) {
+        document.getElementById('error-msg').textContent = 'ไม่พบ token ในลิงก์ กรุณาคลิกลิงก์จากอีเมลอีกครั้ง';
+        document.getElementById('resend-btn').style.display = 'block';
+        setState('error');
+        return;
+      }
+
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'verifyEmail', token })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          if (data.already) {
+            document.getElementById('success-msg').textContent = 'อีเมลนี้ยืนยันแล้ว สามารถเข้าสู่ระบบได้เลย';
+          } else if (data.username) {
+            document.getElementById('success-msg').textContent = 'ยินดีต้อนรับ @' + data.username + '! บัญชีพร้อมใช้งานแล้ว มาหาเพื่อนออกกำลังกายกัน 💪';
+          }
+          setState('success');
+        } else {
+          document.getElementById('error-msg').textContent = data.message || 'ลิงก์ไม่ถูกต้องหรือหมดอายุแล้ว';
+          document.getElementById('resend-btn').style.display = 'block';
+          setState('error');
+        }
+      } catch (err) {
+        document.getElementById('error-msg').textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่ภายหลัง';
+        document.getElementById('resend-btn').style.display = 'block';
+        setState('error');
+      }
+    }
+
+    function showResend() {
+      document.getElementById('resend-overlay').style.display = 'flex';
+    }
+
+    async function doResend() {
+      const email = document.getElementById('resend-email').value.trim();
+      const msgEl = document.getElementById('resend-msg');
+      if (!email) { msgEl.textContent = 'กรุณากรอกอีเมล'; msgEl.style.color = '#FF4D1C'; return; }
+      msgEl.textContent = 'กำลังส่ง...'; msgEl.style.color = '#A0A0A0';
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'resendVerification', email })
+        });
+        const data = await res.json();
+        msgEl.textContent = data.message;
+        msgEl.style.color = data.success ? '#1DB954' : '#FF4D1C';
+      } catch(e) {
+        msgEl.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่'; msgEl.style.color = '#FF4D1C';
+      }
+    }
+
+    verify();
+  </script>
+</body>
+</html>

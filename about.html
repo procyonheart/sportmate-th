@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="เกี่ยวกับ SportMate TH — แอปที่ทำให้การออกกำลังกายในไทยไม่ต้องทำคนเดียวอีกต่อไป">
+  <meta property="og:title" content="เกี่ยวกับเรา — SportMate TH">
+  <meta property="og:description" content="เราสร้าง SportMate TH เพราะออกกำลังกายคนเดียวมันเหงาจริงๆ">
+  <meta property="og:url" content="https://procyonheart.github.io/sportmate-th/about.html">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://procyonheart.github.io/sportmate-th/about.html">
+  <title>เกี่ยวกับเรา — SportMate TH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@700;900&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #FF4D1C;
+      --secondary: #1DB954;
+      --accent: #FFB800;
+      --bg: #0F0F0F;
+      --surface: #1A1A1A;
+      --border: rgba(255,255,255,0.08);
+      --text: #F5F5F5;
+      --muted: #A0A0A0;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.8;
+      font-size: 15px;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15,15,15,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+    }
+
+    .nav-brand-text {
+      font-family: 'Kanit', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -0.04em;
+      color: var(--text);
+    }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .nav-back:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    /* Hero */
+    .about-hero {
+      position: relative;
+      padding: 80px 24px 64px;
+      overflow: hidden;
+    }
+
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 30% 50%, rgba(255,77,28,0.18), transparent),
+                  radial-gradient(ellipse 50% 40% at 80% 20%, rgba(255,184,0,0.12), transparent);
+      pointer-events: none;
+    }
+
+    .about-hero .inner {
+      max-width: 760px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: rgba(255,77,28,0.12);
+      border: 1px solid rgba(255,77,28,0.25);
+      border-radius: 100px;
+      padding: 4px 14px;
+      margin-bottom: 20px;
+    }
+
+    .about-hero h1 {
+      font-family: 'Kanit', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .about-hero h1 span { color: var(--primary); }
+
+    .about-hero .lead {
+      font-size: 18px;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 580px;
+    }
+
+    /* Content */
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .section {
+      margin-bottom: 56px;
+    }
+
+    .section h2 {
+      font-family: 'Kanit', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 22px;
+      background: var(--primary);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .section p {
+      color: var(--muted);
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    /* Stats */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 40px 0;
+    }
+
+    @media (max-width: 600px) {
+      .stats-row { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .stat-card .num {
+      font-family: 'Kanit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-card .label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Mission card */
+    .mission-card {
+      background: linear-gradient(135deg, rgba(255,77,28,0.12), rgba(255,184,0,0.08));
+      border: 1px solid rgba(255,77,28,0.2);
+      border-radius: 16px;
+      padding: 32px;
+      margin: 24px 0;
+    }
+
+    .mission-card p {
+      font-family: 'Kanit', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Contact */
+    .contact-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .contact-row:last-child { border-bottom: none; }
+
+    .contact-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255,77,28,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .contact-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .contact-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .contact-value:hover { color: var(--primary); }
+
+    /* CTA */
+    .cta-block {
+      text-align: center;
+      padding: 48px 24px;
+      background: var(--surface);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    .cta-block h3 {
+      font-family: 'Kanit', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .cta-block p {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50px;
+      font-family: 'Kanit', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      text-decoration: none;
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s;
+    }
+
+    .btn-primary:hover { transform: translateY(-3px) scale(1.03); }
+    .btn-primary:active { transform: scale(0.97); }
+
+    /* Footer */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+    }
+
+    footer p { font-size: 13px; color: var(--muted); }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navGrad" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FF6B35"/><stop offset="1" stop-color="#CC2200"/>
+          </linearGradient>
+        </defs>
+        <path d="M10 40 L28 5 L52 5 L70 40 L52 75 L28 75 Z" fill="url(#navGrad)"/>
+        <polygon points="50,12 27,44 43,44 20,68 53,36 37,36" fill="white"/>
+      </svg>
+      <span class="nav-brand-text">SPORT<span style="color:#FF4D1C;">MATE</span></span>
+      <span style="background:#FF4D1C;color:white;font-family:'Kanit',sans-serif;font-size:10px;font-weight:900;padding:2px 6px;border-radius:3px;letter-spacing:0.05em;">TH</span>
+    </a>
+    <a href="index.html" class="nav-back">← กลับหน้าหลัก</a>
+  </nav>
+
+  <div class="about-hero">
+    <div class="inner">
+      <div class="tag">เกี่ยวกับเรา</div>
+      <h1>เราสร้าง SportMate TH<br>เพราะ<span>ออกกำลังกาย</span><br>คนเดียวมันเหงา</h1>
+      <p class="lead">ความจริงง่ายๆ ที่ทำให้เราเริ่มต้นทุกอย่าง — คนไทยรักการออกกำลังกาย แต่หาเพื่อนไปด้วยกันไม่ได้ SportMate TH เกิดมาเพื่อแก้ปัญหานี้</p>
+    </div>
+  </div>
+
+  <main class="container">
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="num">50K+</div>
+        <div class="label">ผู้ใช้งานทั่วไทย</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">120K+</div>
+        <div class="label">กิจกรรมที่สร้าง</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">30+</div>
+        <div class="label">จังหวัดที่ครอบคลุม</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>จุดเริ่มต้น</h2>
+      <p>ทุกอย่างเริ่มจากคนที่อยากวิ่งแต่ไม่มีเพื่อน ลองโพสต์ใน Facebook กลุ่มกีฬาก็ไม่มีคนตอบ ลอง Line กลุ่มก็รกไปด้วยข้อความอื่น สุดท้ายก็วิ่งคนเดียวไปวันๆ</p>
+      <p>เราเลยคิดว่าต้องมีวิธีที่ดีกว่านี้ — แอปที่รู้ว่าตอนนี้ใครอยู่แถวคุณ พร้อมออกไปเล่นกีฬาด้วยกัน โดยไม่ต้องโพสต์ ไม่ต้องรอ และไม่ต้องเขินที่จะชวนคนแปลกหน้า</p>
+    </div>
+
+    <div class="section">
+      <h2>สิ่งที่เราเชื่อ</h2>
+      <div class="mission-card">
+        <p>"คนไทยทุกคนควรมีเพื่อนออกกำลังกาย — ไม่ว่าจะอยู่ที่ไหน เล่นกีฬาอะไร หรือว่างกี่โมง"</p>
+      </div>
+      <p style="margin-top:16px;">SportMate TH ไม่ใช่แค่แอปหาเพื่อน แต่คือชุมชนนักกีฬาไทยที่เชื่อว่าการออกกำลังกายด้วยกันสนุกกว่าคนเดียวเสมอ</p>
+    </div>
+
+    <div class="section" id="contact">
+      <h2>ติดต่อเรา</h2>
+      <div class="contact-card">
+        <div class="contact-row">
+          <div class="contact-icon">📞</div>
+          <div>
+            <div class="contact-label">โทรศัพท์</div>
+            <a href="tel:06350973116" class="contact-value">063-509-7311-6</a>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-icon">✉️</div>
+          <div>
+            <div class="contact-label">อีเมล</div>
+            <a href="mailto:8077232@crma.ac.th" class="contact-value">8077232@crma.ac.th</a>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-icon">⏰</div>
+          <div>
+            <div class="contact-label">เวลาทำการ</div>
+            <span class="contact-value" style="cursor:default;">จันทร์–ศุกร์ 09.00–18.00 น.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Founder Section -->
+    <div class="section" id="founder">
+      <h2>ผู้ก่อตั้ง</h2>
+      <div style="display:flex;align-items:center;gap:24px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:28px;flex-wrap:wrap;">
+        <!-- Photo -->
+        <div style="flex-shrink:0;">
+          <div id="founder-photo-wrap" style="width:100px;height:100px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#FF4D1C,#FFB800);display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-size:32px;font-weight:900;color:white;letter-spacing:-0.03em;box-shadow:0 8px 32px rgba(255,77,28,0.3);">
+            อจ
+          </div>
+          <img id="founder-photo" src="https://drive.google.com/uc?export=view&id=147TqMl1wgCOnxGMuY9eddkVAEPSnQtgr" alt="นนร.อภิชัจจ์ จิรชีวีวงศ์"
+            style="display:none;width:100px;height:100px;border-radius:50%;object-fit:cover;box-shadow:0 8px 32px rgba(255,77,28,0.3);"
+            onload="document.getElementById('founder-photo-wrap').style.display='none';this.style.display='block';"
+            onerror="this.style.display='none';document.getElementById('founder-photo-wrap').style.display='flex';">
+        </div>
+        <!-- Info -->
+        <div style="flex:1;min-width:200px;">
+          <div style="font-family:'Kanit',sans-serif;font-size:20px;font-weight:900;color:#F5F5F5;letter-spacing:-0.02em;margin-bottom:4px;">
+            นนร.อภิชัจจ์ จิรชีวีวงศ์
+          </div>
+          <div style="font-size:14px;color:#FF4D1C;font-weight:600;margin-bottom:12px;">
+            CEO &amp; Founder · นักเรียนนายร้อย
+          </div>
+          <p style="font-size:14px;color:#A0A0A0;line-height:1.7;margin-bottom:16px;">
+            เริ่มสร้าง SportMate TH จากความเชื่อว่าการออกกำลังกายด้วยกันสนุกกว่าคนเดียวเสมอ — และทุกคนควรมีเพื่อนร่วมทางในการดูแลสุขภาพ
+          </p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <a href="https://instagram.com/t.p_says_gn" target="_blank" rel="noopener"
+              style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#A0A0A0;text-decoration:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 12px;transition:color 0.2s,border-color 0.2s;"
+              onmouseover="this.style.color='#F5F5F5';this.style.borderColor='rgba(255,255,255,0.25)'"
+              onmouseout="this.style.color='#A0A0A0';this.style.borderColor='rgba(255,255,255,0.1)'">
+              📸 @t.p_says_gn
+            </a>
+            <a href="tel:0635097316"
+              style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#A0A0A0;text-decoration:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 12px;transition:color 0.2s,border-color 0.2s;"
+              onmouseover="this.style.color='#F5F5F5';this.style.borderColor='rgba(255,255,255,0.25)'"
+              onmouseout="this.style.color='#A0A0A0';this.style.borderColor='rgba(255,255,255,0.1)'">
+              📞 063-509-7316
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-block">
+      <h3>พร้อมเริ่มต้นแล้วหรือยัง?</h3>
+      <p>สมัครฟรี ใช้เวลาไม่ถึง 1 นาที</p>
+      <a href="index.html" class="btn-primary" onclick="event.preventDefault();window.location.href='index.html';setTimeout(()=>document.querySelector('.btn-primary')&&openSignupModal&&openSignupModal(),300)">สมัครสมาชิกฟรี →</a>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>© 2025 SportMate TH — <a href="index.html">หน้าหลัก</a> · <a href="privacy.html">นโยบายความเป็นส่วนตัว</a> · <a href="terms.html">เงื่อนไขการใช้งาน</a></p>
+  </footer>
+
+</body>
+</html>
