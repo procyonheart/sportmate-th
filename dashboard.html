@@ -409,6 +409,82 @@
     .prof-color-btn.sel { border-color:white; transform:scale(1.2); }
     .nav-avatar { cursor:pointer; }
     .nav-avatar:hover { opacity:0.85; }
+
+    /* ── NOTIFICATION BELL ───────────────────────────────────── */
+    .notif-bell-wrap { position:relative; cursor:pointer; }
+    .notif-bell-btn {
+      width:34px; height:34px; border-radius:50%;
+      background:var(--surface); border:1px solid var(--border);
+      color:var(--muted); font-size:16px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .notif-bell-btn:hover { background:rgba(255,77,28,0.12); color:var(--primary); }
+    .notif-badge {
+      position:absolute; top:-4px; right:-4px;
+      background:var(--primary); color:white;
+      border-radius:50%; width:18px; height:18px;
+      font-size:10px; font-weight:700; font-family:'Kanit',sans-serif;
+      display:none; align-items:center; justify-content:center;
+      pointer-events:none;
+    }
+    .notif-badge.show { display:flex; }
+
+    /* ── NOTIFICATION PANEL ──────────────────────────────────── */
+    .notif-panel {
+      position:fixed; top:68px; right:16px;
+      width:min(320px, calc(100vw - 32px));
+      background:rgba(14,14,14,0.98);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:16px;
+      box-shadow:0 8px 40px rgba(0,0,0,0.7);
+      z-index:600;
+      overflow:hidden;
+      display:none;
+    }
+    .notif-panel.open { display:block; }
+    .notif-panel-hd {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 16px 12px;
+      border-bottom:1px solid rgba(255,255,255,0.07);
+    }
+    .notif-panel-title { font-family:'Kanit',sans-serif; font-weight:700; font-size:14px; }
+    .notif-mark-read {
+      font-size:11px; color:var(--primary); cursor:pointer;
+      background:none; border:none; font-family:'Sarabun',sans-serif;
+    }
+    .notif-mark-read:hover { opacity:0.8; }
+    .notif-list { max-height:340px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.1) transparent; }
+    .notif-item {
+      padding:12px 16px;
+      border-bottom:1px solid rgba(255,255,255,0.04);
+      cursor:pointer;
+      transition:background 0.15s;
+    }
+    .notif-item:last-child { border-bottom:none; }
+    .notif-item:hover { background:rgba(255,255,255,0.04); }
+    .notif-item.unread { background:rgba(255,77,28,0.06); }
+    .notif-item-msg { font-size:13px; color:var(--text); line-height:1.5; }
+    .notif-item-time { font-size:11px; color:var(--dim); margin-top:3px; }
+    .notif-action { font-size:12px; color:var(--primary); margin-top:4px; font-weight:600; }
+    .notif-empty { padding:28px 16px; text-align:center; color:var(--dim); font-size:13px; }
+
+    /* ── PANEL TABS ──────────────────────────────────────────── */
+    .panel-tabs {
+      display:none;
+      background:rgba(8,8,8,0.97);
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      padding:0 16px;
+    }
+    .panel-tabs.show { display:flex; }
+    .tab-btn {
+      flex:1; padding:10px 6px;
+      background:none; border:none; border-bottom:2px solid transparent;
+      color:var(--muted); font-family:'Kanit',sans-serif; font-weight:600; font-size:13px;
+      cursor:pointer; transition:color 0.2s, border-color 0.2s;
+    }
+    .tab-btn:hover { color:var(--text); }
+    .tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); }
   </style>
 </head>
 <body>
@@ -423,11 +499,24 @@
     <span class="nav-logo-text">SportMate TH</span>
   </a>
   <div class="nav-user">
+    <div class="notif-bell-wrap" onclick="toggleNotifPanel()" title="การแจ้งเตือน">
+      <button class="notif-bell-btn">🔔</button>
+      <span class="notif-badge" id="notif-badge">0</span>
+    </div>
     <button class="nav-avatar" id="user-avatar" onclick="openProfile()" title="แก้ไขโปรไฟล์"></button>
     <span class="nav-name" id="user-username"></span>
     <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
   </div>
 </nav>
+
+<!-- ── NOTIFICATION PANEL ───────────────────────────────────── -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-panel-hd">
+    <span class="notif-panel-title">🔔 การแจ้งเตือน</span>
+    <button class="notif-mark-read" onclick="markAllRead()">อ่านทั้งหมด</button>
+  </div>
+  <div class="notif-list" id="notif-list"></div>
+</div>
 
 <!-- ── MAP ────────────────────────────────────────────────────── -->
 <div id="map"></div>
@@ -468,9 +557,14 @@
     <div class="panel-pill"></div>
     <div class="panel-count-wrap">
       <span class="panel-badge" id="panel-count">0</span>
-      <span class="panel-label">กิจกรรมใกล้เคียง</span>
+      <span class="panel-label" id="panel-label">กิจกรรมใกล้เคียง</span>
     </div>
     <span class="panel-chevron">▲</span>
+  </div>
+  <div class="panel-tabs" id="panel-tabs">
+    <button class="tab-btn active" id="tab-all" onclick="setTab('all',event)">ทั้งหมด</button>
+    <button class="tab-btn" id="tab-mine" onclick="setTab('mine',event)">โพสของฉัน</button>
+    <button class="tab-btn" id="tab-joined" onclick="setTab('joined',event)">ที่เข้าร่วม</button>
   </div>
   <div class="panel-body" id="act-feed">
     <div class="empty-state">
@@ -613,6 +707,15 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2ByyVNuhwblvp
 const userRaw = localStorage.getItem('sm_user');
 if (!userRaw) window.location.href = 'login.html';
 const me = JSON.parse(userRaw || '{}');
+if (me.expires_at && Date.now() > me.expires_at) {
+  localStorage.removeItem('sm_user');
+  window.location.href = 'login.html';
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+function escapeHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 
 // ─── State ───────────────────────────────────────────────────
 let map, userMarker;
@@ -622,6 +725,7 @@ let allActivities = [];
 let activeSport = 'all';
 let searchQ = '';
 let panelOpen = false;
+let currentTab = 'all';
 let postLat = null, postLng = null;
 let pickedSport = '';
 
@@ -657,6 +761,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
   initMap();
   loadActivities();
+  renderNotifBadge();
+  setInterval(pollNotifications, 60000);
 });
 
 function logout() {
@@ -781,7 +887,17 @@ function demo() {
 
 // ─── Filter + apply ───────────────────────────────────────────
 function getFiltered() {
-  let list = allActivities;
+  let list;
+
+  if (currentTab === 'mine') {
+    list = allActivities.filter(a => a.username === me.username);
+  } else if (currentTab === 'joined') {
+    const joined = JSON.parse(localStorage.getItem('sm_joined') || '{}');
+    list = Object.values(joined).sort((a,b) => (b.joined_at||0) - (a.joined_at||0));
+    return list;
+  } else {
+    list = allActivities;
+  }
 
   if (activeSport !== 'all')
     list = list.filter(a => a.sport && a.sport.includes(activeSport));
@@ -829,15 +945,19 @@ function renderFeed(list) {
     const dt = new Date(a.datetime);
     const dtS = dt.toLocaleDateString('th-TH',{weekday:'short',month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
     const em = emoji(a.sport);
-    const sn = sportName(a.sport);
+    const sn = escapeHtml(sportName(a.sport));
+    const loc = escapeHtml(a.location_name||'');
+    const uname = escapeHtml(a.username||'');
+    const desc = escapeHtml(a.description||'');
     const d = (userLat && a.lat && a.lng) ? fmtDist(dist(userLat,userLng,a.lat,a.lng)) : null;
-    return `<div class="act-card" style="animation-delay:${i*0.04}s" onclick="showDetail('${a.id}')">
+    const isMine = a.username === me.username;
+    return `<div class="act-card" style="animation-delay:${i*0.04}s${isMine?';border-left:2px solid var(--primary)':''}" onclick="showDetail('${escapeHtml(String(a.id))}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
         <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
           <div class="act-icon">${em}</div>
           <div style="min-width:0;">
             <div style="font-family:'Kanit',sans-serif;font-weight:700;font-size:14px;">${sn}</div>
-            <div style="font-size:12px;color:#A0A0A0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${a.location_name||''}</div>
+            <div style="font-size:12px;color:#A0A0A0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${loc}</div>
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
@@ -847,9 +967,9 @@ function renderFeed(list) {
       </div>
       <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:12px;color:#A0A0A0;">🕐 ${dtS}</span>
-        <span style="font-size:12px;color:#505050;">@${a.username||''}</span>
+        <span style="font-size:12px;color:#505050;">@${uname}${isMine?' <span style="color:var(--primary);font-size:10px;">• โพสของฉัน</span>':''}</span>
       </div>
-      ${a.description?`<div style="margin-top:5px;font-size:12px;color:#606060;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${a.description}</div>`:''}
+      ${desc?`<div style="margin-top:5px;font-size:12px;color:#606060;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${desc}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -886,12 +1006,18 @@ function showDetail(id) {
   const dtS = dt.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' เวลา '+dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
   const d = (userLat && a.lat && a.lng) ? fmtDist(dist(userLat,userLng,a.lat,a.lng)) : null;
 
-  document.getElementById('detail-badge').innerHTML = em + ' ' + sn;
+  const loc = escapeHtml(a.location_name||'ไม่ระบุสถานที่');
+  const uname = escapeHtml(a.username||'');
+  const desc = escapeHtml(a.description||'');
+  const aid = escapeHtml(String(a.id));
+  const isMine = a.username === me.username;
+
+  document.getElementById('detail-badge').innerHTML = em + ' ' + escapeHtml(sn);
   document.getElementById('detail-body').innerHTML = `
     <div class="info-row">
       <span class="info-icon">📍</span>
       <div>
-        <div class="info-text">${a.location_name||'ไม่ระบุสถานที่'}</div>
+        <div class="info-text">${loc}</div>
         ${d?`<div class="info-sub">ห่างจากคุณ ${d}</div>`:''}
       </div>
     </div>
@@ -905,20 +1031,138 @@ function showDetail(id) {
     </div>
     <div class="info-row">
       <span class="info-icon">👤</span>
-      <div class="info-text">โพสโดย <strong>@${a.username||''}</strong></div>
+      <div class="info-text">โพสโดย <strong>@${uname}</strong></div>
     </div>
-    ${a.description?`<div class="detail-desc">"${a.description}"</div>`:''}
-    <button class="btn-join" onclick="joinActivity('${(a.username||'').replace(/'/g,"\\'")}')">สนใจร่วมกิจกรรม 🏃</button>
+    ${desc?`<div class="detail-desc">"${desc}"</div>`:''}
+    ${isMine
+      ? `<div style="padding:12px;background:rgba(255,77,28,0.08);border:1px solid rgba(255,77,28,0.2);border-radius:12px;font-size:13px;color:var(--muted);text-align:center;">นี่คือกิจกรรมของคุณ</div>`
+      : `<button class="btn-join" onclick="joinActivity('${aid}')">สนใจร่วมกิจกรรม 🏃</button>`
+    }
   `;
 
   openModal('modal-detail');
   if (a.lat && a.lng && map) map.flyTo([a.lat, a.lng], 15, { duration:1 });
 }
 
-function joinActivity(username) {
-  if (navigator.clipboard) navigator.clipboard.writeText('@' + username).catch(()=>{});
-  showToast('คัดลอก @' + username + ' เพื่อติดต่อ ✓');
+function joinActivity(id) {
+  const a = allActivities.find(x => String(x.id) === String(id));
+  if (!a) return;
+
+  const joined = JSON.parse(localStorage.getItem('sm_joined') || '{}');
+  if (joined[id]) { showToast('คุณเข้าร่วมกิจกรรมนี้แล้ว'); closeModal('modal-detail'); return; }
+
+  joined[id] = { ...a, joined_at: Date.now() };
+  localStorage.setItem('sm_joined', JSON.stringify(joined));
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST', headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action:'joinActivity', activity_id:id, joiner_username:me.username, creator_username:a.username })
+  }).catch(() => {});
+
+  showToast('เข้าร่วมกิจกรรมสำเร็จ! ✓');
   closeModal('modal-detail');
+}
+
+// ─── Notifications ───────────────────────────────────────────
+function getNotifications() {
+  try { return JSON.parse(localStorage.getItem('sm_notifications') || '[]'); } catch(e) { return []; }
+}
+
+function saveNotifications(list) {
+  localStorage.setItem('sm_notifications', JSON.stringify(list));
+}
+
+function addNotification(notif) {
+  const list = getNotifications();
+  list.unshift(notif);
+  saveNotifications(list.slice(0, 50));
+  renderNotifBadge();
+}
+
+function renderNotifBadge() {
+  const list = getNotifications();
+  const unread = list.filter(n => !n.read).length;
+  const badge = document.getElementById('notif-badge');
+  badge.textContent = unread > 9 ? '9+' : String(unread);
+  badge.classList.toggle('show', unread > 0);
+}
+
+function renderNotifList() {
+  const list = getNotifications();
+  const el = document.getElementById('notif-list');
+  if (!list.length) {
+    el.innerHTML = '<div class="notif-empty">ยังไม่มีการแจ้งเตือน</div>';
+    return;
+  }
+  function timeAgo(ts) {
+    const diff = Date.now() - ts;
+    if (diff < 60000) return 'เมื่อกี้';
+    if (diff < 3600000) return Math.floor(diff/60000) + ' นาทีที่แล้ว';
+    if (diff < 86400000) return Math.floor(diff/3600000) + ' ชั่วโมงที่แล้ว';
+    return Math.floor(diff/86400000) + ' วันที่แล้ว';
+  }
+  el.innerHTML = list.map((n,i) => `
+    <div class="notif-item${n.read?'':' unread'}" onclick="handleNotifClick(${i})">
+      <div class="notif-item-msg">${escapeHtml(n.message)}</div>
+      <div class="notif-item-time">${timeAgo(n.created_at)}</div>
+      ${n.action==='tab:mine'?'<div class="notif-action">ดูโพสของฉัน →</div>':''}
+    </div>
+  `).join('');
+}
+
+function handleNotifClick(idx) {
+  const list = getNotifications();
+  if (!list[idx]) return;
+  list[idx].read = true;
+  saveNotifications(list);
+  renderNotifBadge();
+  if (list[idx].action === 'tab:mine') {
+    document.getElementById('notif-panel').classList.remove('open');
+    if (!panelOpen) togglePanel();
+    setTab('mine', null);
+  }
+  renderNotifList();
+}
+
+function markAllRead() {
+  const list = getNotifications().map(n => ({ ...n, read: true }));
+  saveNotifications(list);
+  renderNotifBadge();
+  renderNotifList();
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) renderNotifList();
+}
+
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('notif-panel');
+  const bell = document.querySelector('.notif-bell-wrap');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !bell.contains(e.target))
+    panel.classList.remove('open');
+});
+
+async function pollNotifications() {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') return;
+  try {
+    const r = await fetch(APPS_SCRIPT_URL + '?action=getNotifications&username=' + encodeURIComponent(me.username));
+    const d = await r.json();
+    if (d.success && d.notifications && d.notifications.length) {
+      d.notifications.forEach(n => {
+        addNotification({
+          id: Date.now() + Math.random(),
+          type: 'join',
+          message: escapeHtml(n.joiner_username) + ' ขอเข้าร่วมกิจกรรมของคุณ',
+          read: false,
+          created_at: Date.now(),
+          action: 'tab:mine'
+        });
+      });
+      showToast('มีคนขอเข้าร่วมกิจกรรมของคุณ! 🔔');
+    }
+  } catch(e) {}
 }
 
 // ─── Panel ────────────────────────────────────────────────────
@@ -928,6 +1172,17 @@ function togglePanel() {
   const fab = document.getElementById('fab');
   panel.classList.toggle('collapsed', !panelOpen);
   fab.classList.toggle('panel-open', panelOpen);
+  document.getElementById('panel-tabs').classList.toggle('show', panelOpen);
+}
+
+function setTab(tab, e) {
+  if (e) e.stopPropagation();
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  const labels = { all:'กิจกรรมใกล้เคียง', mine:'โพสของฉัน', joined:'ที่เข้าร่วม' };
+  document.getElementById('panel-label').textContent = labels[tab];
+  applyFilters();
 }
 
 // ─── Modals ───────────────────────────────────────────────────

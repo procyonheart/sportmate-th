@@ -1106,6 +1106,18 @@
     return valid;
   }
 
+  function saveWelcomeNotification(username) {
+    const notifs = [{
+      id: Date.now(),
+      type: 'welcome',
+      message: 'ยินดีต้อนรับสู่ SportMate TH! 🎉 บัญชี @' + username + ' พร้อมใช้งานแล้ว',
+      read: false,
+      created_at: Date.now(),
+      action: null
+    }];
+    localStorage.setItem('sm_notifications', JSON.stringify(notifs));
+  }
+
   async function hashPassword(password) {
     const msgBuffer = new TextEncoder().encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -1144,6 +1156,7 @@
       // ถ้ายังไม่ได้ตั้ง URL ให้แสดง success ทันที (demo mode)
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
         setSubmitLoading(false);
+        saveWelcomeNotification(payload.username);
         document.getElementById('signup-form-wrap').style.display = 'none';
         document.getElementById('signup-success').style.display = 'flex';
         return;
@@ -1158,6 +1171,7 @@
         const data = await res.json();
 
         if (data.success) {
+          saveWelcomeNotification(payload.username);
           document.getElementById('signup-form-wrap').style.display = 'none';
           document.getElementById('signup-success').style.display = 'flex';
         } else {

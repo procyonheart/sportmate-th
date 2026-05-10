@@ -233,13 +233,23 @@
 
       setLoading(true);
 
+      // Rate limiting check
+      const rl = JSON.parse(localStorage.getItem('sm_login_attempts') || '{}');
+      if (rl.locked_until && Date.now() < rl.locked_until) {
+        const sec = Math.ceil((rl.locked_until - Date.now()) / 1000);
+        showError('พยายาม login ผิดเกินไป กรุณารอ ' + sec + ' วินาที');
+        return;
+      }
+
       // Demo mode (no backend URL set)
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
         // Simulate login with any credentials for demo
+        localStorage.removeItem('sm_login_attempts');
         localStorage.setItem('sm_user', JSON.stringify({
           username: email.split('@')[0],
           fullname: 'นักกีฬา Demo',
-          email: email
+          email: email,
+          expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000
         }));
         window.location.href = 'dashboard.html';
         return;
@@ -255,15 +265,21 @@
         const data = await res.json();
 
         if (data.success) {
+          localStorage.removeItem('sm_login_attempts');
           localStorage.setItem('sm_user', JSON.stringify({
             username: data.username,
             fullname: data.fullname,
             email: data.email,
-            sports: data.sports
+            sports: data.sports,
+            expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000
           }));
           window.location.href = 'dashboard.html';
         } else {
-          showError(data.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+          const attempts = { count: (rl.count || 0) + 1 };
+          if (attempts.count >= 3) attempts.locked_until = Date.now() + 60000;
+          localStorage.setItem('sm_login_attempts', JSON.stringify(attempts));
+          const remaining = 3 - attempts.count;
+          showError((data.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง') + (remaining > 0 ? ` (เหลือ ${remaining} ครั้ง)` : ' — บัญชีถูกล็อค 60 วินาที'));
         }
       } catch (err) {
         showError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่');
