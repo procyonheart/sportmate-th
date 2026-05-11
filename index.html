@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="SportMate TH แอปหาเพื่อนออกกำลังกายที่ดีที่สุดในไทย จับคู่นักกีฬา วิ่ง ฟุตบอล โยคะ มวยไทย ด้วย GPS ใกล้บ้านคุณ ดาวน์โหลดฟรี มีผู้ใช้กว่า 50,000 คน">
+<meta name="description" content="SportMate TH — หาเพื่อนออกกำลังกายด้วย GPS ในย่านที่คุณอยู่ วิ่ง ฟุตบอล โยคะ มวยไทย สมัครฟรี ไม่มีค่าใช้จ่าย">
 <title>SportMate TH — แอปหาเพื่อนออกกำลังกายในไทย</title>
 <link rel="canonical" href="https://procyonheart.github.io/sportmate-th/">
 
@@ -12,7 +12,7 @@
 <meta property="og:locale" content="th_TH">
 <meta property="og:site_name" content="SportMate TH">
 <meta property="og:title" content="SportMate TH — แอปหาเพื่อนออกกำลังกายในไทย">
-<meta property="og:description" content="จับคู่นักกีฬา วิ่ง ฟุตบอล โยคะ มวยไทย ด้วย GPS ใกล้บ้านคุณ ดาวน์โหลดฟรี มีผู้ใช้กว่า 50,000 คน">
+<meta property="og:description" content="หาเพื่อนออกกำลังกายด้วย GPS ในย่านที่คุณอยู่ วิ่ง ฟุตบอล โยคะ มวยไทย — สมัครฟรี">
 <meta property="og:url" content="https://procyonheart.github.io/sportmate-th/">
 <meta property="og:image" content="https://procyonheart.github.io/sportmate-th/brand_assets/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -371,6 +371,57 @@
     .hero-stats { justify-content: center !important; }
   }
 
+  /* Mobile navigation */
+  .nav-desktop-links { display: flex; align-items: center; gap: 32px; }
+  .hamburger-btn {
+    display: none; flex-direction: column; justify-content: center; align-items: center;
+    gap: 5px; width: 44px; height: 44px; background: none; border: none;
+    cursor: pointer; padding: 8px; border-radius: 8px;
+    transition: background 0.2s ease;
+  }
+  .hamburger-btn:hover { background: rgba(255,255,255,0.08); }
+  .hamburger-btn span {
+    display: block; width: 22px; height: 2px; background: #F5F5F5;
+    border-radius: 2px; transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+  .hamburger-btn.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger-btn.is-open span:nth-child(2) { opacity: 0; }
+  .hamburger-btn.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  .mobile-menu {
+    display: none; position: fixed; top: 68px; left: 0; right: 0;
+    background: rgba(18,18,18,0.97); backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 8px 24px 24px; z-index: 49;
+    flex-direction: column; gap: 0;
+  }
+  .mobile-menu.is-open { display: flex; }
+  .mobile-menu-link {
+    font-family: 'Sarabun', sans-serif; font-size: 16px; font-weight: 500;
+    color: #A0A0A0; text-decoration: none; padding: 14px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    transition: color 0.2s ease; display: block;
+  }
+  .mobile-menu-link:hover { color: #F5F5F5; }
+  .mobile-cta-group { display: flex; flex-direction: column; gap: 10px; padding-top: 16px; }
+  .mobile-login-link {
+    display: block; text-align: center; padding: 13px 20px;
+    font-size: 15px; font-family: 'Kanit', sans-serif; font-weight: 700;
+    color: #F5F5F5; border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px; text-decoration: none; letter-spacing: 0.01em;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .mobile-login-link:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.4); }
+
+  @media (max-width: 768px) {
+    .nav-desktop-links { display: none !important; }
+    .nav-login-btn { display: none !important; }
+    .hamburger-btn { display: flex !important; }
+  }
+  @media (max-width: 420px) {
+    .nav-signup-btn { display: none !important; }
+  }
+
   /* Nav link states */
   .nav-link {
     color: #A0A0A0; font-size: 15px; font-weight: 500;
@@ -402,17 +453,20 @@
     "price": "0",
     "priceCurrency": "THB"
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.8",
-    "ratingCount": "12400"
-  },
   "publisher": {
     "@type": "Organization",
     "name": "SportMate TH",
     "url": "https://procyonheart.github.io/sportmate-th/"
   }
 }
+</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-G8QHZ2ZLBH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-G8QHZ2ZLBH');
 </script>
 </head>
 <body>
@@ -431,17 +485,29 @@
       <span style="font-family:'Kanit',sans-serif;font-size:22px;font-weight:900;font-style:italic;letter-spacing:-0.04em;line-height:1;color:#F5F5F5;">SPORT<span style="color:#FF4D1C;">MATE</span></span>
       <span style="background:#FF4D1C;color:white;font-family:'Kanit',sans-serif;font-size:11px;font-weight:900;padding:3px 7px;border-radius:4px;letter-spacing:0.05em;">TH</span>
     </a>
-    <div class="hidden md:flex" style="display:flex;align-items:center;gap:32px;">
+    <div class="nav-desktop-links">
       <a href="#features" class="nav-link">ฟีเจอร์</a>
       <a href="#how-it-works" class="nav-link">วิธีใช้</a>
       <a href="#gps" class="nav-link">GPS</a>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <a href="login.html" style="padding:10px 20px;font-size:14px;font-family:'Kanit',sans-serif;font-weight:700;color:#F5F5F5;border:1px solid rgba(255,255,255,0.2);border-radius:8px;text-decoration:none;letter-spacing:0.01em;transition:background 0.18s,border-color 0.18s,color 0.18s;" onmouseover="this.style.background='rgba(255,255,255,0.08)';this.style.borderColor='rgba(255,255,255,0.4)'" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(255,255,255,0.2)'">เข้าสู่ระบบ</a>
-      <a href="#cta" class="btn-primary" style="padding:10px 22px;font-size:14px;" onclick="openSignupModal();return false;">สมัครสมาชิก</a>
+      <a href="login.html" class="nav-login-btn" style="padding:10px 20px;font-size:14px;font-family:'Kanit',sans-serif;font-weight:700;color:#F5F5F5;border:1px solid rgba(255,255,255,0.2);border-radius:8px;text-decoration:none;letter-spacing:0.01em;transition:background 0.18s,border-color 0.18s,color 0.18s;" onmouseover="this.style.background='rgba(255,255,255,0.08)';this.style.borderColor='rgba(255,255,255,0.4)'" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(255,255,255,0.2)'">เข้าสู่ระบบ</a>
+      <a href="#cta" class="btn-primary nav-signup-btn" style="padding:10px 22px;font-size:14px;" onclick="openSignupModal();return false;">สมัครสมาชิก</a>
+      <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()" aria-label="เมนู" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
 </nav>
+<div class="mobile-menu" id="mobile-menu" role="navigation">
+  <a href="#features" class="mobile-menu-link" onclick="closeMobileMenu()">ฟีเจอร์</a>
+  <a href="#how-it-works" class="mobile-menu-link" onclick="closeMobileMenu()">วิธีใช้</a>
+  <a href="#gps" class="mobile-menu-link" onclick="closeMobileMenu()">GPS</a>
+  <div class="mobile-cta-group">
+    <a href="login.html" class="mobile-login-link">เข้าสู่ระบบ</a>
+    <a href="#cta" class="btn-primary" style="display:block;text-align:center;padding:13px 20px;font-size:15px;" onclick="openSignupModal();closeMobileMenu();return false;">สมัครสมาชิกฟรี →</a>
+  </div>
+</div>
 <section id="hero" style="position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;padding-top:68px;">
   <!-- Layered gradient bg -->
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 40%, rgba(255,77,28,0.25), transparent),radial-gradient(ellipse 60% 50% at 20% 80%, rgba(255,184,0,0.2), transparent),#0F0F0F;"></div>
@@ -457,24 +523,13 @@
         <a href="#cta" class="btn-primary" style="font-size:16px;padding:15px 32px;" onclick="openSignupModal();return false;">สมัครสมาชิกฟรี →</a>
         <a href="#how-it-works" class="btn-secondary">ดูวิธีใช้งาน</a>
       </div>
-      <!-- Stats row -->
-      <div class="hero-stats" style="display:flex;align-items:center;gap:28px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.08);">
-        
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-family:'Kanit',sans-serif;font-weight:900;font-size:28px;color:#FF4D1C;letter-spacing:-0.03em;">50,000+</span>
-        <span style="font-size:13px;color:#A0A0A0;">นักกีฬาที่เข้าร่วมแล้ว</span>
-      </div>
-      <div style="width:1px;height:40px;background:rgba(255,255,255,0.1);"></div>
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-family:'Kanit',sans-serif;font-weight:900;font-size:28px;color:#FF4D1C;letter-spacing:-0.03em;">120,000+</span>
-        <span style="font-size:13px;color:#A0A0A0;">กิจกรรมที่จัดขึ้นสำเร็จ</span>
-      </div>
-      <div style="width:1px;height:40px;background:rgba(255,255,255,0.1);"></div>
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-family:'Kanit',sans-serif;font-weight:900;font-size:28px;color:#FF4D1C;letter-spacing:-0.03em;">30+</span>
-        <span style="font-size:13px;color:#A0A0A0;">เมืองทั่วประเทศไทย</span>
-      </div>
-      
+      <!-- Launch badge -->
+      <div class="hero-stats" style="display:flex;align-items:center;gap:16px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.08);flex-wrap:wrap;">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,77,28,0.12);border:1px solid rgba(255,77,28,0.3);border-radius:50px;padding:8px 18px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#FF4D1C;display:inline-block;animation:fab-pulse 2s infinite;"></span>
+          <span style="font-family:'Kanit',sans-serif;font-weight:700;font-size:14px;color:#FF4D1C;">เปิดตัวใหม่ — เข้าร่วมเป็นคนแรก</span>
+        </div>
+        <span style="font-size:13px;color:#505050;">ชุมชนกำลังเติบโต รอคุณอยู่ 🏃</span>
       </div>
     </div>
 
@@ -890,7 +945,7 @@
 
   <div style="max-width:700px;margin:0 auto;text-align:center;position:relative;z-index:2;" class="animate-on-scroll">
     <h2 style="font-size:clamp(2.2rem,5vw,3.5rem);font-weight:900;color:white;line-height:1.1;margin-bottom:20px;">พร้อมหยุดออกกำลังกายคนเดียวแล้วหรือยัง?</h2>
-    <p style="font-size:18px;color:rgba(255,255,255,0.8);line-height:1.8;margin-bottom:40px;">นักกีฬากว่า 50,000 คนในไทยใช้ SportMate TH อยู่แล้ว — คุณจะรออีกนานแค่ไหน?</p>
+    <p style="font-size:18px;color:rgba(255,255,255,0.8);line-height:1.8;margin-bottom:40px;">SportMate TH เพิ่งเปิดตัว — สมัครตอนนี้และช่วยสร้างชุมชนนักกีฬาไทยไปด้วยกัน</p>
     <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
       <a href="#" style="display:inline-flex;align-items:center;gap:10px;padding:16px 36px;background:white;color:#FF4D1C;border-radius:50px;font-family:'Kanit',sans-serif;font-weight:800;font-size:16px;text-decoration:none;box-shadow:0 8px 32px rgba(0,0,0,0.2);transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s;"
          onclick="openSignupModal();return false;"
@@ -1032,7 +1087,7 @@
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#A0A0A0;">
-        <span style="color:#FFB800;">★★★★★</span> 4.8 จาก 12,400+ รีวิว
+        <span style="color:#FFB800;">🚀</span> เร็วๆ นี้บน App Store & Google Play
       </div>
       <div style="width:1px;height:16px;background:rgba(255,255,255,0.1);"></div>
       <div style="font-size:13px;color:#A0A0A0;">🆓 ดาวน์โหลดฟรี ไม่มีค่าใช้จ่าย</div>
@@ -1271,6 +1326,7 @@
   function openSignupModal() {
     document.getElementById('signup-modal').classList.add('open');
     document.body.style.overflow = 'hidden';
+    if (typeof gtag !== 'undefined') gtag('event', 'signup_start');
   }
   function closeSignupModal() {
     document.getElementById('signup-modal').classList.remove('open');
@@ -1448,6 +1504,7 @@
           saveWelcomeNotification(payload.username);
           document.getElementById('signup-form-wrap').style.display = 'none';
           document.getElementById('signup-success').style.display = 'flex';
+          if (typeof gtag !== 'undefined') gtag('event', 'sign_up', { method: 'email' });
         } else {
           const ge = document.getElementById('signup-global-error');
           ge.textContent = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
@@ -1486,6 +1543,31 @@
       }
     );
   }
+
+  function toggleMobileMenu() {
+    var btn = document.getElementById('hamburger-btn');
+    var menu = document.getElementById('mobile-menu');
+    var isOpen = menu.classList.contains('is-open');
+    btn.classList.toggle('is-open');
+    menu.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', String(!isOpen));
+    document.body.style.overflow = !isOpen ? 'hidden' : '';
+  }
+  function closeMobileMenu() {
+    var btn = document.getElementById('hamburger-btn');
+    var menu = document.getElementById('mobile-menu');
+    btn.classList.remove('is-open');
+    menu.classList.remove('is-open');
+    btn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('click', function(e) {
+    var btn = document.getElementById('hamburger-btn');
+    var menu = document.getElementById('mobile-menu');
+    if (menu && menu.classList.contains('is-open') && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
+      closeMobileMenu();
+    }
+  });
 
   // Scroll animations with IntersectionObserver
   const observer = new IntersectionObserver(

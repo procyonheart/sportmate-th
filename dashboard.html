@@ -51,17 +51,19 @@
     .nav-logo-text { font-family:'Kanit',sans-serif; font-weight:900; font-size:17px; color:var(--text); letter-spacing:-0.02em; }
     .nav-user { display:flex; align-items:center; gap:10px; }
     .nav-avatar {
-      width:32px; height:32px; border-radius:50%;
+      width:40px; height:40px; border-radius:50%;
       background: linear-gradient(135deg,var(--primary),#FFB800);
       display:flex; align-items:center; justify-content:center;
-      font-family:'Kanit',sans-serif; font-weight:900; font-size:13px; color:white;
+      font-family:'Kanit',sans-serif; font-weight:900; font-size:14px; color:white;
+      flex-shrink:0;
     }
     .nav-name { font-size:13px; color:var(--muted); }
     .btn-logout {
-      padding:6px 14px; background:var(--surface); border:1px solid var(--border);
-      border-radius:8px; color:var(--muted); font-size:12px; cursor:pointer;
-      font-family:'Sarabun',sans-serif;
+      padding:10px 16px; background:var(--surface); border:1px solid var(--border);
+      border-radius:8px; color:var(--muted); font-size:13px; cursor:pointer;
+      font-family:'Sarabun',sans-serif; min-height:44px;
       transition: background 0.2s, color 0.2s, border-color 0.2s;
+      display:flex; align-items:center;
     }
     .btn-logout:hover { background:rgba(255,77,28,0.12); color:var(--primary); border-color:rgba(255,77,28,0.3); }
 
@@ -95,7 +97,8 @@
     .dist-select {
       background: rgba(255,255,255,0.06); border:1px solid var(--border);
       border-radius:8px; color:var(--muted); font-family:'Sarabun',sans-serif;
-      font-size:12px; padding:5px 8px; outline:none; cursor:pointer; flex-shrink:0;
+      font-size:13px; padding:9px 10px; outline:none; cursor:pointer; flex-shrink:0;
+      min-height:44px;
     }
     .dist-select option { background:#1A1A1A; }
 
@@ -115,12 +118,13 @@
       white-space: nowrap;
     }
     .chip {
-      flex-shrink:0; padding:5px 14px; border-radius:50px;
+      flex-shrink:0; padding:9px 16px; border-radius:50px;
       background: rgba(8,8,8,0.78); backdrop-filter:blur(12px);
       border:1px solid var(--border); color:var(--muted);
-      font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;
+      font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;
       box-shadow: 0 2px 8px rgba(0,0,0,0.4);
       transition: background 0.2s, color 0.2s, border-color 0.2s;
+      min-height:44px; display:inline-flex; align-items:center;
     }
     .chip.active { background:rgba(255,77,28,0.18); border-color:rgba(255,77,28,0.5); color:var(--primary); }
     .chip:hover:not(.active) { background:rgba(255,255,255,0.1); color:var(--text); }
@@ -235,11 +239,11 @@
     }
     .modal-title { font-family:'Kanit',sans-serif; font-weight:700; font-size:18px; letter-spacing:-0.02em; }
     .modal-x {
-      width:32px; height:32px; border-radius:50%;
+      width:40px; height:40px; border-radius:50%;
       background:var(--surface); border:1px solid var(--border);
-      color:var(--muted); font-size:15px; cursor:pointer;
+      color:var(--muted); font-size:16px; cursor:pointer;
       display:flex; align-items:center; justify-content:center;
-      transition: background 0.2s, color 0.2s;
+      transition: background 0.2s, color 0.2s; flex-shrink:0;
     }
     .modal-x:hover { background:rgba(255,77,28,0.15); color:var(--primary); }
     .modal-div { height:1px; background:var(--border); margin:16px 24px; }
@@ -247,8 +251,8 @@
 
     /* ── FORM ────────────────────────────────────────────── */
     .flabel {
-      display:block; font-size:11px; font-weight:600; color:var(--muted);
-      margin-bottom:6px; letter-spacing:0.06em; text-transform:uppercase;
+      display:block; font-size:12px; font-weight:600; color:var(--muted);
+      margin-bottom:6px; letter-spacing:0.05em; text-transform:uppercase;
     }
     .finput, .ftextarea {
       width:100%; background:rgba(255,255,255,0.04);
@@ -267,11 +271,11 @@
     .sport-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
     @media (max-width:360px) { .sport-grid { grid-template-columns:repeat(3,1fr); } }
     .sport-btn {
-      padding:12px 6px;
+      padding:12px 6px; min-height:64px;
       background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.08);
       border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:4px;
       cursor:pointer; transition:background 0.2s, border-color 0.2s, color 0.2s;
-      color:var(--muted); font-family:'Sarabun',sans-serif; font-size:11px; text-align:center;
+      color:var(--muted); font-family:'Sarabun',sans-serif; font-size:12px; text-align:center;
     }
     .sport-btn-icon { font-size:22px; line-height:1; }
     .sport-btn:hover:not(.sel) { background:rgba(255,255,255,0.08); color:var(--text); }
@@ -540,6 +544,14 @@
     .tab-btn:hover { color:var(--text); }
     .tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); }
   </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-G8QHZ2ZLBH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-G8QHZ2ZLBH');
+</script>
 </head>
 <body>
 
@@ -708,6 +720,21 @@
         <div style="margin-bottom:16px;">
           <label class="flabel">รายละเอียด (ไม่บังคับ)</label>
           <textarea id="p-desc" class="ftextarea" placeholder="เช่น นัดเจอที่ประตูหน้า มือใหม่ยินดีต้อนรับ"></textarea>
+        </div>
+
+        <!-- รูปภาพ -->
+        <div style="margin-bottom:16px;">
+          <label class="flabel">รูปภาพ (ไม่บังคับ)</label>
+          <div id="act-photo-area" style="border:1.5px dashed rgba(255,255,255,0.15);border-radius:14px;overflow:hidden;cursor:pointer;position:relative;background:rgba(255,255,255,0.03);transition:border-color 0.2s;" onclick="document.getElementById('act-photo-input').click()">
+            <div id="act-photo-placeholder" style="padding:20px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <span style="font-size:28px;">📷</span>
+              <span style="font-size:13px;color:#A0A0A0;">คลิกเพื่อเพิ่มรูปภาพ</span>
+              <span style="font-size:11px;color:#505050;">รองรับ JPG, PNG (สูงสุด 5 MB)</span>
+            </div>
+            <img id="act-photo-preview" src="" alt="" style="display:none;width:100%;height:160px;object-fit:cover;">
+          </div>
+          <input id="act-photo-input" type="file" accept="image/*" style="display:none;" onchange="handleActivityPhoto(this)">
+          <button type="button" id="act-photo-remove" onclick="removeActivityPhoto()" style="display:none;margin-top:6px;background:rgba(255,77,28,0.1);border:1px solid rgba(255,77,28,0.2);border-radius:10px;padding:6px 12px;font-size:12px;color:#FF4D1C;cursor:pointer;width:100%;">ลบรูปภาพ ✕</button>
         </div>
 
         <!-- ความเป็นส่วนตัว -->
@@ -1132,7 +1159,27 @@ function setSportFilter(sport, el) {
 function renderFeed(list) {
   const feed = document.getElementById('act-feed');
   if (!list || !list.length) {
-    feed.innerHTML = '<div class="empty-state"><div style="font-size:38px;margin-bottom:10px;">😔</div><div style="font-size:14px;color:#A0A0A0;">ไม่พบกิจกรรม</div><div style="font-size:12px;margin-top:6px;color:#505050;">ลองเปลี่ยนตัวกรอง หรือเป็นคนแรกที่โพส!</div></div>';
+    const isMineTab = currentTab === 'mine';
+    const isJoinedTab = currentTab === 'joined';
+    const emptyIcon = isMineTab ? '📍' : isJoinedTab ? '🤝' : '🏃';
+    const emptyTitle = isMineTab
+      ? 'คุณยังไม่ได้โพสกิจกรรม'
+      : isJoinedTab
+        ? 'คุณยังไม่ได้เข้าร่วมกิจกรรมไหน'
+        : 'ยังไม่มีกิจกรรมในพื้นที่นี้';
+    const emptySub = isMineTab
+      ? 'โพสกิจกรรมแรกของคุณ แล้วหาเพื่อนมาร่วม!'
+      : isJoinedTab
+        ? 'เลือก "ทั้งหมด" แล้วกด "สนใจร่วมกิจกรรม" ได้เลย'
+        : 'เป็นคนแรกในย่านนี้ที่โพสกิจกรรม!';
+    const showBtn = !isJoinedTab;
+    feed.innerHTML = `
+      <div class="empty-state" style="padding:40px 20px;">
+        <div style="font-size:48px;margin-bottom:14px;">${emptyIcon}</div>
+        <div style="font-size:15px;font-weight:600;color:#D0D0D0;margin-bottom:6px;">${emptyTitle}</div>
+        <div style="font-size:13px;color:#505050;margin-bottom:${showBtn?'20px':'0'};">${emptySub}</div>
+        ${showBtn ? `<button onclick="openModal('modal-create')" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:50px;font-family:'Kanit',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">+ โพสกิจกรรมแรก</button>` : ''}
+      </div>`;
     return;
   }
 
@@ -1165,6 +1212,7 @@ function renderFeed(list) {
         <span style="font-size:12px;color:#505050;">@${uname}${isMine?' <span style="color:var(--primary);font-size:10px;">• โพสของฉัน</span>':''}${a.privacy==='private'?' <span class="privacy-badge">🔒</span>':''}</span>
       </div>
       ${desc?`<div style="margin-top:5px;font-size:12px;color:#606060;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${desc}</div>`:''}
+      ${a.image_url?`<div style="margin-top:8px;border-radius:10px;overflow:hidden;"><img src="${a.image_url}" alt="รูปกิจกรรม" style="width:100%;height:120px;object-fit:cover;display:block;"></div>`:''}
     </div>`;
   }).join('');
 }
@@ -1209,6 +1257,7 @@ function showDetail(id) {
 
   document.getElementById('detail-badge').innerHTML = em + ' ' + escapeHtml(sn);
   document.getElementById('detail-body').innerHTML = `
+    ${a.image_url?`<div style="margin:-0px -24px 16px;"><img src="${a.image_url}" alt="รูปกิจกรรม" style="width:100%;height:200px;object-fit:cover;display:block;"></div>`:''}
     <div class="info-row">
       <span class="info-icon">📍</span>
       <div>
@@ -1242,6 +1291,16 @@ function showDetail(id) {
             : `<button class="btn-join" onclick="joinActivity('${aid}')">สนใจร่วมกิจกรรม 🏃</button>`;
         })()
     }
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button onclick="shareActivity('facebook','${aid}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;background:#1877F2;color:white;border:none;border-radius:10px;font-size:13px;font-family:'Sarabun',sans-serif;font-weight:600;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.88v2.27h3.32l-.53 3.49h-2.79V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
+        แชร์ Facebook
+      </button>
+      <button onclick="shareActivity('line','${aid}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;background:#06C755;color:white;border:none;border-radius:10px;font-size:13px;font-family:'Sarabun',sans-serif;font-weight:600;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+        แชร์ LINE
+      </button>
+    </div>
   `;
 
   openModal('modal-detail');
@@ -1317,6 +1376,26 @@ function leaveActivity(id) {
   showToast('ออกจากกิจกรรมแล้ว');
   closeModal('modal-detail');
   if (currentTab === 'joined') applyFilters();
+}
+
+// ─── Share Activity ───────────────────────────────────────────
+function shareActivity(platform, id) {
+  const a = allActivities.find(x => x.id == id);
+  if (!a) return;
+  const sn = sportName(a.sport);
+  const loc = a.location_name || '';
+  const dt = new Date(a.datetime);
+  const dtS = dt.toLocaleDateString('th-TH',{weekday:'short',month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const text = `${emoji(a.sport)} ${sn} ที่ ${loc} — ${dtS}\nหาเพื่อนร่วม ${a.max_people||1} คน มาด้วยกันเลย! 🏃`;
+  const pageUrl = 'https://procyonheart.github.io/sportmate-th/dashboard.html';
+  const shareUrl = pageUrl + '?utm_source=' + platform + '&utm_medium=share&utm_campaign=activity';
+
+  if (typeof gtag !== 'undefined') gtag('event', 'share', { method: platform, content_type: 'activity' });
+  if (platform === 'facebook') {
+    window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '&quote=' + encodeURIComponent(text), '_blank', 'width=600,height=400');
+  } else if (platform === 'line') {
+    window.open('https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(text), '_blank', 'width=600,height=600');
+  }
 }
 
 // ─── Notifications ───────────────────────────────────────────
@@ -1463,6 +1542,48 @@ function pickSport(btn) {
   document.getElementById('p-sport').value = pickedSport;
 }
 
+// ─── Activity Photo ───────────────────────────────────────────
+let postImageBase64 = null;
+
+function handleActivityPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('รูปภาพต้องไม่เกิน 5 MB', true); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      const maxW = 800, maxH = 600;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      postImageBase64 = canvas.toDataURL('image/jpeg', 0.75);
+      document.getElementById('act-photo-preview').src = postImageBase64;
+      document.getElementById('act-photo-preview').style.display = 'block';
+      document.getElementById('act-photo-placeholder').style.display = 'none';
+      document.getElementById('act-photo-remove').style.display = 'block';
+      document.getElementById('act-photo-area').style.borderStyle = 'solid';
+      document.getElementById('act-photo-area').style.borderColor = 'rgba(255,77,28,0.4)';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeActivityPhoto() {
+  postImageBase64 = null;
+  document.getElementById('act-photo-input').value = '';
+  document.getElementById('act-photo-preview').style.display = 'none';
+  document.getElementById('act-photo-preview').src = '';
+  document.getElementById('act-photo-placeholder').style.display = 'flex';
+  document.getElementById('act-photo-remove').style.display = 'none';
+  document.getElementById('act-photo-area').style.borderStyle = 'dashed';
+  document.getElementById('act-photo-area').style.borderColor = 'rgba(255,255,255,0.15)';
+}
+
 // ─── Post Submit ──────────────────────────────────────────────
 async function handlePost(e) {
   e.preventDefault();
@@ -1483,7 +1604,8 @@ async function handlePost(e) {
   const payload = {
     action:'postActivity', username:me.username, sport, location_name:loc,
     lat:postLat, lng:postLng, datetime:dt, description:desc, max_people:parseInt(mp),
-    privacy: document.getElementById('p-privacy').value
+    privacy: document.getElementById('p-privacy').value,
+    image_url: postImageBase64 || ''
   };
 
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
@@ -1493,6 +1615,7 @@ async function handlePost(e) {
     if (postLat && postLng && map) map.flyTo([postLat, postLng], 15);
     applyFilters();
     showToast('โพสกิจกรรมสำเร็จ! 🎉');
+    if (typeof gtag !== 'undefined') gtag('event', 'activity_created', { sport });
     resetForm();
     closeModal('modal-create');
   } else {
@@ -1501,6 +1624,7 @@ async function handlePost(e) {
       const data = await res.json();
       if (data.success) {
         showToast('โพสกิจกรรมสำเร็จ! 🎉');
+        if (typeof gtag !== 'undefined') gtag('event', 'activity_created', { sport });
         resetForm();
         closeModal('modal-create');
         await loadActivities();
@@ -1848,6 +1972,7 @@ function resetForm() {
   clearSuggestions();
   document.getElementById('post-map-container').style.display = 'none';
   if (postPreviewMap) { postPreviewMap.remove(); postPreviewMap = null; postPreviewMarker = null; }
+  removeActivityPhoto();
 }
 </script>
 </body>
