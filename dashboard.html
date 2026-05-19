@@ -55,7 +55,7 @@
       background: linear-gradient(135deg,var(--primary),#FFB800);
       display:flex; align-items:center; justify-content:center;
       font-family:'Kanit',sans-serif; font-weight:900; font-size:14px; color:white;
-      flex-shrink:0;
+      flex-shrink:0; overflow:hidden; padding:0; border:none;
     }
     .nav-name { font-size:13px; color:var(--muted); }
     .btn-logout {
@@ -429,13 +429,23 @@
 
     /* ── PROFILE MODAL ───────────────────────────────────────── */
     .prof-avatar-preview {
-      width:72px; height:72px; border-radius:50%;
+      width:80px; height:80px; border-radius:50%;
       display:flex; align-items:center; justify-content:center;
       font-size:32px; margin:0 auto 16px;
       border:2px solid rgba(255,255,255,0.18);
       box-shadow:0 4px 20px rgba(0,0,0,0.5);
       transition:background 0.3s;
+      position:relative; overflow:hidden; cursor:pointer;
+      flex-shrink:0;
     }
+    .prof-avatar-preview:hover { border-color:rgba(255,255,255,0.35); }
+    .prof-avatar-preview .photo-hover-hint {
+      display:none; position:absolute; inset:0;
+      background:rgba(0,0,0,0.45); border-radius:50%;
+      align-items:center; justify-content:center;
+      font-size:18px; color:#fff;
+    }
+    .prof-avatar-preview:hover .photo-hover-hint { display:flex; }
     .prof-emoji-grid {
       display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:14px;
     }
@@ -467,6 +477,35 @@
     .skill-btn.sel { background:rgba(255,77,28,0.15); border-color:rgba(255,77,28,0.5); color:var(--primary); }
     .nav-avatar { cursor:pointer; }
     .nav-avatar:hover { opacity:0.85; }
+
+    /* ── PHOTO LIGHTBOX ──────────────────────────────────────── */
+    #photo-lightbox {
+      display:none; position:fixed; inset:0; z-index:2000;
+      background:rgba(0,0,0,0.92); backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      align-items:center; justify-content:center;
+    }
+    #photo-lightbox.open { display:flex; }
+    #photo-lightbox img {
+      max-width:92vw; max-height:88vh;
+      border-radius:16px;
+      box-shadow:0 24px 80px rgba(0,0,0,0.8);
+      object-fit:contain;
+      animation:lbIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes lbIn {
+      from { transform:scale(0.85); opacity:0; }
+      to   { transform:scale(1);    opacity:1; }
+    }
+    #photo-lightbox-close {
+      position:absolute; top:16px; right:16px;
+      width:40px; height:40px; border-radius:50%;
+      background:rgba(255,255,255,0.12); border:none;
+      color:#fff; font-size:20px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:background 0.15s;
+    }
+    #photo-lightbox-close:hover { background:rgba(255,255,255,0.2); }
 
     /* ── NOTIFICATION BELL ───────────────────────────────────── */
     .notif-bell-wrap { position:relative; cursor:pointer; }
@@ -558,6 +597,12 @@
 <!-- Toast -->
 <div id="toast" class="toast"></div>
 
+<!-- Photo Lightbox -->
+<div id="photo-lightbox" onclick="closePhotoViewer()">
+  <button id="photo-lightbox-close" onclick="closePhotoViewer()">✕</button>
+  <img id="photo-lightbox-img" src="" alt="รูปโปรไฟล์" onclick="event.stopPropagation()">
+</div>
+
 <!-- ── NAV ───────────────────────────────────────────────────── -->
 <nav class="nav">
   <a href="index.html" class="nav-logo">
@@ -569,7 +614,10 @@
       <button class="notif-bell-btn">🔔</button>
       <span class="notif-badge" id="notif-badge">0</span>
     </div>
-    <button class="nav-avatar" id="user-avatar" onclick="openProfile()" title="แก้ไขโปรไฟล์"></button>
+    <button class="nav-avatar" id="user-avatar" onclick="openProfile()" title="แก้ไขโปรไฟล์">
+      <img id="nav-avatar-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;">
+      <span id="nav-avatar-text"></span>
+    </button>
     <span class="nav-name" id="user-username"></span>
     <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
   </div>
@@ -782,9 +830,9 @@
 
       <!-- Avatar + photo upload row -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:18px;">
-        <div style="position:relative;">
-          <div id="prof-avatar-preview" class="prof-avatar-preview" style="position:relative;overflow:hidden;"></div>
-          <img id="prof-photo-preview" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+        <div id="prof-avatar-preview" class="prof-avatar-preview" onclick="onAvatarClick()">
+          <img id="prof-photo-preview" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+          <span class="photo-hover-hint">🔍</span>
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
           <label for="prof-photo-input" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:7px 14px;font-size:13px;color:#A0A0A0;cursor:pointer;transition:background 0.2s;"
@@ -968,11 +1016,40 @@ window.addEventListener('DOMContentLoaded', function() {
   loadActivities();
   renderNotifBadge();
   setInterval(pollNotifications, 60000);
+  setInterval(() => {
+    allActivities = allActivities.filter(a => new Date(a.datetime) > new Date());
+    renderActivities();
+  }, 5 * 60 * 1000);
 });
 
 function logout() {
   localStorage.removeItem('sm_user');
   window.location.href = 'login.html';
+}
+
+// ─── Photo Lightbox ───────────────────────────────────────────
+function openPhotoViewer(src) {
+  document.getElementById('photo-lightbox-img').src = src;
+  document.getElementById('photo-lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePhotoViewer() {
+  document.getElementById('photo-lightbox').classList.remove('open');
+  document.getElementById('photo-lightbox-img').src = '';
+  document.body.style.overflow = '';
+}
+// esc key closes lightbox
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closePhotoViewer();
+});
+
+// Click avatar in profile modal: view photo or open file picker
+function onAvatarClick() {
+  if (profileData && profileData.photoBase64) {
+    openPhotoViewer(profileData.photoBase64);
+  } else {
+    document.getElementById('prof-photo-input').click();
+  }
 }
 
 // ─── Toast ───────────────────────────────────────────────────
@@ -1080,11 +1157,11 @@ async function loadActivities() {
     if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
       list = demo();
     } else {
-      const r = await fetch(APPS_SCRIPT_URL + '?action=getActivities');
+      const r = await fetch(APPS_SCRIPT_URL + '?action=getActivities&_t=' + Date.now(), { cache: 'no-store' });
       const d = await r.json();
       list = (d.success && d.activities && d.activities.length) ? d.activities : demo();
     }
-    allActivities = list;
+    allActivities = list.filter(a => new Date(a.datetime) > new Date());
   } catch(e) {
     allActivities = demo();
   }
@@ -1095,12 +1172,12 @@ function demo() {
   const now = new Date();
   const add = h => new Date(now.getTime()+h*3600000).toISOString().slice(0,16);
   return [
-    { id:'1', username:'SportKing99',  sport:'🏃 วิ่ง',         location_name:'สวนลุมพินี',           lat:13.7303, lng:100.5418, datetime:add(2),  description:'Morning run 5km มือใหม่ยินดีต้อนรับ 🌅', max_people:5, created_at:now.toISOString() },
-    { id:'2', username:'FutbolTH',     sport:'⚽ ฟุตบอล',       location_name:'สนามฟุตบอลรามคำแหง',   lat:13.7569, lng:100.6142, datetime:add(5),  description:'ฟุตบอล 7 คน ขาดอีก 3 คน ทุกระดับยินดีต้อนรับ', max_people:3, created_at:now.toISOString() },
-    { id:'3', username:'YogaGirl',     sport:'🧘 โยคะ',         location_name:'สวนจตุจักร',            lat:13.7999, lng:100.5558, datetime:add(8),  description:'Yoga เช้า เน้นยืดเหยียด นำอุปกรณ์มาเอง',  max_people:4, created_at:now.toISOString() },
-    { id:'4', username:'BikeRider',    sport:'🚴 ปั่นจักรยาน',  location_name:'เกาะรัตนโกสินทร์',     lat:13.7519, lng:100.4927, datetime:add(12), description:'ปั่นรอบเกาะ 10km ความเร็วปานกลาง',  max_people:6, created_at:now.toISOString() },
-    { id:'5', username:'BoxerTH',      sport:'🥊 มวยไทย',       location_name:'ค่ายมวยรัชดา',          lat:13.7840, lng:100.5667, datetime:add(24), description:'ซ้อมมวยไทยพื้นฐาน เหมาะผู้เริ่มต้น',  max_people:2, created_at:now.toISOString() },
-    { id:'6', username:'SwimBKK',      sport:'🏊 ว่ายน้ำ',       location_name:'สระว่ายน้ำ รามา 9',    lat:13.7456, lng:100.5696, datetime:add(3),  description:'ว่ายน้ำตอนเช้า 1 ชั่วโมง ทุกระดับ',  max_people:3, created_at:now.toISOString() },
+    { id:'1', username:'SportKing99',  display_name:'SportKing99',  sport:'🏃 วิ่ง',         location_name:'สวนลุมพินี',           lat:13.7303, lng:100.5418, datetime:add(2),  description:'Morning run 5km มือใหม่ยินดีต้อนรับ 🌅', max_people:5, join_count:0, created_at:now.toISOString() },
+    { id:'2', username:'FutbolTH',     display_name:'FutbolTH',     sport:'⚽ ฟุตบอล',       location_name:'สนามฟุตบอลรามคำแหง',   lat:13.7569, lng:100.6142, datetime:add(5),  description:'ฟุตบอล 7 คน ขาดอีก 3 คน ทุกระดับยินดีต้อนรับ', max_people:3, join_count:0, created_at:now.toISOString() },
+    { id:'3', username:'YogaGirl',     display_name:'YogaGirl',     sport:'🧘 โยคะ',         location_name:'สวนจตุจักร',            lat:13.7999, lng:100.5558, datetime:add(8),  description:'Yoga เช้า เน้นยืดเหยียด นำอุปกรณ์มาเอง',  max_people:4, join_count:0, created_at:now.toISOString() },
+    { id:'4', username:'BikeRider',    display_name:'BikeRider',    sport:'🚴 ปั่นจักรยาน',  location_name:'เกาะรัตนโกสินทร์',     lat:13.7519, lng:100.4927, datetime:add(12), description:'ปั่นรอบเกาะ 10km ความเร็วปานกลาง',  max_people:6, join_count:0, created_at:now.toISOString() },
+    { id:'5', username:'BoxerTH',      display_name:'BoxerTH',      sport:'🥊 มวยไทย',       location_name:'ค่ายมวยรัชดา',          lat:13.7840, lng:100.5667, datetime:add(24), description:'ซ้อมมวยไทยพื้นฐาน เหมาะผู้เริ่มต้น',  max_people:2, join_count:0, created_at:now.toISOString() },
+    { id:'6', username:'SwimBKK',      display_name:'SwimBKK',      sport:'🏊 ว่ายน้ำ',       location_name:'สระว่ายน้ำ รามา 9',    lat:13.7456, lng:100.5696, datetime:add(3),  description:'ว่ายน้ำตอนเช้า 1 ชั่วโมง ทุกระดับ',  max_people:3, join_count:0, created_at:now.toISOString() },
   ];
 }
 
@@ -1190,9 +1267,13 @@ function renderFeed(list) {
     const sn = escapeHtml(sportName(a.sport));
     const loc = escapeHtml(a.location_name||'');
     const uname = escapeHtml(a.username||'');
+    const dname = escapeHtml(a.display_name || a.username || '');
     const desc = escapeHtml(a.description||'');
     const d = (userLat && a.lat && a.lng) ? fmtDist(dist(userLat,userLng,a.lat,a.lng)) : null;
     const isMine = a.username === me.username;
+    const cardJoiners = JSON.parse(localStorage.getItem('sm_activity_joiners') || '{}');
+    const cardJoinCount = (cardJoiners[String(a.id)]?.length) || (a.join_count || 0);
+    const cardRemaining = Math.max(0, (a.max_people || 1) - cardJoinCount);
     return `<div class="act-card" style="animation-delay:${i*0.04}s${isMine?';border-left:2px solid var(--primary)':''}" onclick="showDetail('${escapeHtml(String(a.id))}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
         <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
@@ -1204,12 +1285,12 @@ function renderFeed(list) {
         </div>
         <div style="text-align:right;flex-shrink:0;">
           ${d?`<div style="font-size:11px;color:#FF4D1C;font-weight:700;margin-bottom:2px;">${d}</div>`:''}
-          <div style="font-size:11px;color:#505050;">👥 ${a.max_people||1} คน</div>
+          <div style="font-size:11px;color:${cardRemaining===0?'#888':'#505050'};">👥 ${cardRemaining===0?'เต็มแล้ว':'เหลือ '+cardRemaining+' คน'}</div>
         </div>
       </div>
       <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:12px;color:#A0A0A0;">🕐 ${dtS}</span>
-        <span style="font-size:12px;color:#505050;">@${uname}${isMine?' <span style="color:var(--primary);font-size:10px;">• โพสของฉัน</span>':''}${a.privacy==='private'?' <span class="privacy-badge">🔒</span>':''}</span>
+        <span style="font-size:12px;color:#505050;">${dname}${isMine?' <span style="color:var(--primary);font-size:10px;">• โพสของฉัน</span>':''}${a.privacy==='private'?' <span class="privacy-badge">🔒</span>':''}</span>
       </div>
       ${desc?`<div style="margin-top:5px;font-size:12px;color:#606060;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${desc}</div>`:''}
       ${a.image_url?`<div style="margin-top:8px;border-radius:10px;overflow:hidden;"><img src="${a.image_url}" alt="รูปกิจกรรม" style="width:100%;height:120px;object-fit:cover;display:block;"></div>`:''}
@@ -1251,13 +1332,39 @@ function showDetail(id) {
 
   const loc = escapeHtml(a.location_name||'ไม่ระบุสถานที่');
   const uname = escapeHtml(a.username||'');
+  const dname = escapeHtml(a.display_name || a.username || '');
   const desc = escapeHtml(a.description||'');
   const aid = escapeHtml(String(a.id));
   const isMine = a.username === me.username;
 
+  // Join count: prefer localStorage (real-time) then backend field
+  const detailJoiners = JSON.parse(localStorage.getItem('sm_activity_joiners') || '{}');
+  const detailJoinCount = (detailJoiners[aid]?.length) || (a.join_count || 0);
+  const detailRemaining = Math.max(0, (a.max_people || 1) - detailJoinCount);
+
+  // Creator avatar
+  const hasPhoto = isMine && profileData.photoBase64;
+  const creatorBg = isMine ? (profileData.avatarColor || '#1A1A1A') : '#1A1A1A';
+  const creatorAvatarInner = hasPhoto
+    ? `<img src="${profileData.photoBase64}" style="width:100%;height:100%;object-fit:cover;display:block;">`
+    : `<span style="font-size:22px;">${isMine ? (profileData.avatarEmoji||'🏃') : '🏃'}</span>`;
+  const avatarClickFn = hasPhoto
+    ? `event.stopPropagation();openPhotoViewer('${profileData.photoBase64.replace(/'/g,"\\'")}');`
+    : `window.location='profile.html?user=${uname}';`;
+  const verifyBadge = (a.id_verify_status === 'approved' || (isMine && me.id_verify_status === 'approved'))
+    ? `<span style="font-size:10px;background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:6px;padding:1px 6px;margin-left:4px;">✓ ยืนยันตัวตน</span>` : '';
+
   document.getElementById('detail-badge').innerHTML = em + ' ' + escapeHtml(sn);
   document.getElementById('detail-body').innerHTML = `
-    ${a.image_url?`<div style="margin:-0px -24px 16px;"><img src="${a.image_url}" alt="รูปกิจกรรม" style="width:100%;height:200px;object-fit:cover;display:block;"></div>`:''}
+    ${a.image_url?`<div id="detail-img-wrap" style="margin:-0px -24px 16px;"><img id="detail-img" alt="รูปกิจกรรม" style="width:100%;height:200px;object-fit:cover;display:block;"></div>`:''}
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin-bottom:14px;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">
+      <div id="creator-avatar-${aid}" onclick="${avatarClickFn}" style="width:46px;height:46px;border-radius:50%;background:${creatorBg};display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,0.12);cursor:pointer;transition:opacity 0.15s;position:relative;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" title="ดูโปรไฟล์">${creatorAvatarInner}</div>
+      <div style="min-width:0;flex:1;cursor:pointer;" onclick="window.location='profile.html?user=${uname}'">
+        <div style="font-family:'Kanit',sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;gap:4px;">${dname}${verifyBadge}</div>
+        <div style="font-size:12px;color:var(--muted);">@${uname}${isMine?' • <span style="color:var(--primary);">โพสของฉัน</span>':''}</div>
+      </div>
+      <span style="color:var(--muted);font-size:18px;cursor:pointer;" onclick="window.location='profile.html?user=${uname}'">›</span>
+    </div>
     <div class="info-row">
       <span class="info-icon">📍</span>
       <div>
@@ -1271,11 +1378,7 @@ function showDetail(id) {
     </div>
     <div class="info-row">
       <span class="info-icon">👥</span>
-      <div class="info-text">ต้องการเพิ่มอีก <strong style="color:#FF4D1C;">${a.max_people||1} คน</strong></div>
-    </div>
-    <div class="info-row">
-      <span class="info-icon">👤</span>
-      <div class="info-text">โพสโดย <strong>@${uname}</strong></div>
+      <div class="info-text">${detailRemaining===0?'<strong style="color:#888;">กิจกรรมเต็มแล้ว</strong>':`เหลืออีก <strong style="color:#FF4D1C;">${detailRemaining} คน</strong> <span style="color:var(--muted);font-size:12px;">(${detailJoinCount}/${a.max_people||1} เข้าร่วม)</span>`}</div>
     </div>
     ${desc?`<div class="detail-desc">"${desc}"</div>`:''}
     ${a.privacy==='private'?`<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:10px;font-size:12px;color:var(--muted);margin-bottom:4px;">🔒 กิจกรรมส่วนตัว — มองเห็นเฉพาะคุณ</div>`:''}
@@ -1303,8 +1406,29 @@ function showDetail(id) {
     </div>
   `;
 
+  if (a.image_url) {
+    const imgEl = document.getElementById('detail-img');
+    if (imgEl) {
+      imgEl.onerror = () => { const w = document.getElementById('detail-img-wrap'); if (w) w.style.display = 'none'; };
+      imgEl.src = a.image_url;
+    }
+  }
+
   openModal('modal-detail');
   if (a.lat && a.lng && map) map.flyTo([a.lat, a.lng], 15, { duration:1 });
+
+  // Fetch creator photo for other users' posts
+  if (!isMine && APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
+    fetch(APPS_SCRIPT_URL + '?action=getProfile&username=' + encodeURIComponent(a.username))
+      .then(r => r.json())
+      .then(d => {
+        if (!d.success || !d.photo_base64) return;
+        const el = document.getElementById('creator-avatar-' + aid);
+        if (!el) return;
+        el.innerHTML = `<img src="${d.photo_base64}" style="width:100%;height:100%;object-fit:cover;display:block;" onclick="event.stopPropagation();openPhotoViewer('${d.photo_base64.replace(/'/g, "\\'")}')">`;
+        el.title = 'ดูรูปโปรไฟล์';
+      }).catch(() => {});
+  }
 }
 
 function renderMembersSection(aid) {
@@ -1350,7 +1474,7 @@ function joinActivity(id) {
 
   fetch(APPS_SCRIPT_URL, {
     method: 'POST', headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action:'joinActivity', activity_id:id, joiner_username:me.username, creator_username:a.username })
+    body: JSON.stringify({ action:'joinActivity', activity_id:id, username:me.username })
   }).catch(() => {});
 
   showToast('เข้าร่วมกิจกรรมสำเร็จ! ✓');
@@ -1399,12 +1523,16 @@ function shareActivity(platform, id) {
 }
 
 // ─── Notifications ───────────────────────────────────────────
+function notifKey() {
+  return 'sm_notifications_' + (me.username || 'guest');
+}
+
 function getNotifications() {
-  try { return JSON.parse(localStorage.getItem('sm_notifications') || '[]'); } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem(notifKey()) || '[]'); } catch(e) { return []; }
 }
 
 function saveNotifications(list) {
-  localStorage.setItem('sm_notifications', JSON.stringify(list));
+  localStorage.setItem(notifKey(), JSON.stringify(list));
 }
 
 function addNotification(notif) {
@@ -1553,14 +1681,19 @@ function handleActivityPhoto(input) {
   reader.onload = function(ev) {
     const img = new Image();
     img.onload = function() {
-      const maxW = 800, maxH = 600;
+      const maxW = 400, maxH = 300;
       let w = img.width, h = img.height;
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      postImageBase64 = canvas.toDataURL('image/jpeg', 0.75);
+      let q = 0.5;
+      postImageBase64 = canvas.toDataURL('image/jpeg', q);
+      while (postImageBase64.length > 40000 && q > 0.15) {
+        q = Math.round((q - 0.1) * 10) / 10;
+        postImageBase64 = canvas.toDataURL('image/jpeg', q);
+      }
       document.getElementById('act-photo-preview').src = postImageBase64;
       document.getElementById('act-photo-preview').style.display = 'block';
       document.getElementById('act-photo-placeholder').style.display = 'none';
@@ -1605,7 +1738,8 @@ async function handlePost(e) {
     action:'postActivity', username:me.username, sport, location_name:loc,
     lat:postLat, lng:postLng, datetime:dt, description:desc, max_people:parseInt(mp),
     privacy: document.getElementById('p-privacy').value,
-    image_url: postImageBase64 || ''
+    image_url: postImageBase64 || '',
+    display_name: (profileData && profileData.displayName) || me.username
   };
 
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
@@ -1623,16 +1757,20 @@ async function handlePost(e) {
       const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
       const data = await res.json();
       if (data.success) {
+        const newA = { ...payload, id: data.id, created_at: new Date().toISOString() };
+        delete newA.action;
+        allActivities.unshift(newA);
+        applyFilters();
         showToast('โพสกิจกรรมสำเร็จ! 🎉');
         if (typeof gtag !== 'undefined') gtag('event', 'activity_created', { sport });
         resetForm();
         closeModal('modal-create');
-        await loadActivities();
+        loadActivities();
       } else {
         showToast(data.message || 'เกิดข้อผิดพลาด', true);
       }
     } catch(err) {
-      showToast('ไม่สามารถเชื่อมต่อได้', true);
+      showToast('ไม่สามารถเชื่อมต่อได้: ' + err.message, true);
     }
   }
 
@@ -1733,23 +1871,27 @@ function loadProfile() {
 
 function applyProfile() {
   const avatar = document.getElementById('user-avatar');
+  const img    = document.getElementById('nav-avatar-img');
+  const txt    = document.getElementById('nav-avatar-text');
+  if (!img || !txt) return;
+
   if (profileData.photoBase64) {
-    avatar.textContent = '';
-    avatar.style.backgroundImage = 'url(' + profileData.photoBase64 + ')';
-    avatar.style.backgroundSize = 'cover';
-    avatar.style.backgroundPosition = 'center';
-    avatar.style.background = '';
-    avatar.style.fontSize = '';
+    img.src = profileData.photoBase64;
+    img.style.display = 'block';
+    txt.style.display = 'none';
+    avatar.style.background = 'transparent';
   } else if (profileData.avatarEmoji) {
-    avatar.style.backgroundImage = '';
-    avatar.textContent = profileData.avatarEmoji;
-    avatar.style.fontSize = '20px';
+    img.style.display = 'none';
+    txt.style.display = '';
+    txt.textContent = profileData.avatarEmoji;
     avatar.style.background = profileData.avatarColor || '#FF4D1C';
+    avatar.style.fontSize = '20px';
   } else {
-    avatar.style.backgroundImage = '';
-    avatar.textContent = (me.fullname || me.username || 'U')[0].toUpperCase();
-    avatar.style.fontSize = '';
+    img.style.display = 'none';
+    txt.style.display = '';
+    txt.textContent = (me.fullname || me.username || 'U')[0].toUpperCase();
     avatar.style.background = 'linear-gradient(135deg,var(--primary),#FFB800)';
+    avatar.style.fontSize = '';
   }
 }
 
@@ -1763,14 +1905,16 @@ function openProfile() {
   // Photo preview
   const photoPreview = document.getElementById('prof-photo-preview');
   const prev = document.getElementById('prof-avatar-preview');
+  // Clear stale text nodes (keep img and hint span)
+  Array.from(prev.childNodes).forEach(n => { if (n.nodeType === Node.TEXT_NODE) n.remove(); });
   if (profileData.photoBase64) {
     photoPreview.src = profileData.photoBase64;
     photoPreview.style.display = 'block';
-    prev.textContent = '';
     document.getElementById('prof-photo-remove').style.display = 'inline-block';
   } else {
     photoPreview.style.display = 'none';
-    prev.textContent = pickedProfileEmoji || (me.fullname || me.username || 'U')[0].toUpperCase();
+    const txt = pickedProfileEmoji || (me.fullname || me.username || 'U')[0].toUpperCase();
+    prev.insertBefore(document.createTextNode(txt), prev.firstChild);
     document.getElementById('prof-photo-remove').style.display = 'none';
   }
   prev.style.background = pickedProfileColor;
@@ -1824,9 +1968,13 @@ function pickProfileEmoji(btn, em) {
   btn.classList.add('sel');
   pickedProfileEmoji = em;
   const prev = document.getElementById('prof-avatar-preview');
-  prev.textContent = em;
+  // Remove stale text nodes only (keep img and hint span)
+  Array.from(prev.childNodes).forEach(n => { if (n.nodeType === Node.TEXT_NODE) n.remove(); });
+  prev.insertBefore(document.createTextNode(em), prev.firstChild);
   prev.style.fontSize = '32px';
   prev.style.background = pickedProfileColor;
+  // Hide photo if switching to emoji
+  document.getElementById('prof-photo-preview').style.display = 'none';
 }
 
 function pickProfileColor(btn, c) {
@@ -1858,9 +2006,12 @@ function handlePhotoUpload(input) {
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       const b64 = canvas.toDataURL('image/jpeg', 0.7);
       profileData.photoBase64 = b64;
-      document.getElementById('prof-photo-preview').src = b64;
-      document.getElementById('prof-photo-preview').style.display = 'block';
-      document.getElementById('prof-avatar-preview').textContent = '';
+      const imgEl = document.getElementById('prof-photo-preview');
+      imgEl.src = b64;
+      imgEl.style.display = 'block';
+      // Clear text/emoji content but keep img and hint span
+      const prev = document.getElementById('prof-avatar-preview');
+      Array.from(prev.childNodes).forEach(n => { if (n.nodeType === Node.TEXT_NODE) n.textContent = ''; });
       document.getElementById('prof-photo-remove').style.display = 'inline-block';
     };
     img.src = e.target.result;
@@ -1870,12 +2021,16 @@ function handlePhotoUpload(input) {
 
 function removePhoto() {
   delete profileData.photoBase64;
-  document.getElementById('prof-photo-preview').style.display = 'none';
-  document.getElementById('prof-photo-preview').src = '';
+  const imgEl = document.getElementById('prof-photo-preview');
+  imgEl.style.display = 'none';
+  imgEl.src = '';
   document.getElementById('prof-photo-remove').style.display = 'none';
   document.getElementById('prof-photo-input').value = '';
+  // Restore emoji/initial text node
   const prev = document.getElementById('prof-avatar-preview');
-  prev.textContent = pickedProfileEmoji || (me.fullname || me.username || 'U')[0].toUpperCase();
+  // Remove any stale text nodes first
+  Array.from(prev.childNodes).forEach(n => { if (n.nodeType === Node.TEXT_NODE) n.remove(); });
+  prev.insertBefore(document.createTextNode(pickedProfileEmoji || (me.fullname || me.username || 'U')[0].toUpperCase()), prev.firstChild);
   prev.style.fontSize = pickedProfileEmoji ? '32px' : '26px';
 }
 
@@ -1936,10 +2091,42 @@ async function submitIdVerify() {
   }
 }
 
-function saveProfile() {
+async function saveProfile() {
   const availability = Array.from(document.querySelectorAll('.avail-cb:checked')).map(function(cb) { return cb.value; });
+  const newDisplayName = document.getElementById('prof-displayname').value.trim();
+  const oldDisplayName = profileData && profileData.displayName;
+
+  // Check daily limit for display name change
+  if (newDisplayName && newDisplayName !== oldDisplayName) {
+    const lastEdit = localStorage.getItem('sm_displayname_last_edit');
+    const today = new Date().toDateString();
+    if (lastEdit === today) {
+      showToast('สามารถเปลี่ยนชื่อที่แสดงได้วันละ 1 ครั้งเท่านั้น', true);
+      return;
+    }
+    // Sync to backend
+    if (APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'updateDisplayName', username: me.username, new_display_name: newDisplayName })
+        });
+        const d = await res.json();
+        if (!d.success) {
+          showToast(d.message || 'ไม่สามารถเปลี่ยนชื่อได้', true);
+          return;
+        }
+      } catch(e) {
+        showToast('ไม่สามารถเชื่อมต่อได้', true);
+        return;
+      }
+    }
+    localStorage.setItem('sm_displayname_last_edit', today);
+  }
+
   profileData = Object.assign(profileData || {}, {
-    displayName: document.getElementById('prof-displayname').value.trim(),
+    displayName: newDisplayName,
     bio: document.getElementById('prof-bio').value.trim(),
     avatarEmoji: pickedProfileEmoji,
     avatarColor: pickedProfileColor,
@@ -1951,6 +2138,17 @@ function saveProfile() {
   });
   localStorage.setItem('sm_profile', JSON.stringify(profileData));
   applyProfile();
+
+  // Sync photo to backend (fire-and-forget, non-blocking)
+  if (APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
+    if (profileData.photoBase64) {
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'saveProfilePhoto', username: me.username, photo_base64: profileData.photoBase64 })
+      }).catch(() => {});
+    }
+  }
+
   closeModal('modal-profile');
   showToast('บันทึกโปรไฟล์สำเร็จ ✓');
 }
