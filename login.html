@@ -220,9 +220,8 @@
     </div>
   </main>
 
+  <script src="assets/api.js"></script>
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2ByyVNuhwblvpPQf-Rxryr4POeV-MXpxO_NPxUv-SeULIk1shuc2gsbrxCpl-pi_rgA/exec';
-
     // Show toast if redirected after signup
     window.addEventListener('DOMContentLoaded', function() {
       if (new URLSearchParams(window.location.search).get('registered') === '1') {
@@ -237,11 +236,6 @@
       const btn = document.getElementById('toggle-lpw');
       if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
       else { input.type = 'password'; btn.textContent = '👁'; }
-    }
-
-    async function hashPassword(password) {
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password));
-      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
     function setLoading(on) {
@@ -269,12 +263,7 @@
       if (!email) { statusEl.textContent = 'กรอกอีเมลก่อน'; statusEl.style.color = '#FF4D1C'; return; }
       btn.disabled = true; statusEl.textContent = 'กำลังส่ง...'; statusEl.style.color = '#A0A0A0';
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: 'resendVerification', email })
-        });
-        const data = await res.json();
+        const data = await SM_API.call('resendVerification', { email });
         statusEl.textContent = data.success ? '✓ ส่งแล้ว! เช็คอีเมล' : data.message;
         statusEl.style.color = data.success ? '#1DB954' : '#FF4D1C';
       } catch(e) {
@@ -304,31 +293,13 @@
         return;
       }
 
-      // Demo mode (no backend URL set)
-      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
-        // Simulate login with any credentials for demo
-        localStorage.removeItem('sm_login_attempts');
-        localStorage.setItem('sm_user', JSON.stringify({
-          username: email.split('@')[0],
-          fullname: 'นักกีฬา Demo',
-          email: email,
-          expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000
-        }));
-        window.location.href = 'dashboard.html';
-        return;
-      }
-
       try {
-        const password_hash = await hashPassword(pw);
-        const res = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: 'login', email, password_hash })
-        });
-        const data = await res.json();
+        // password is sent over HTTPS and hashed (argon2) server-side — no client hashing
+        const data = await SM_API.call('login', { email, password: pw });
 
         if (data.success) {
           localStorage.removeItem('sm_login_attempts');
+          SM_API.setToken(data.token);
           localStorage.setItem('sm_user', JSON.stringify({
             username: data.username,
             fullname: data.fullname,
@@ -339,6 +310,8 @@
             province: data.province || '',
             preferred_time: data.preferred_time || '',
             id_verify_status: data.id_verify_status || 'unverified',
+            display_name: data.display_name || data.username,
+            photo_url: data.photo_url || '',
             expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000
           }));
           window.location.href = 'dashboard.html';

@@ -978,17 +978,19 @@
   </div>
 </div>
 
+<script src="assets/api.js"></script>
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2ByyVNuhwblvpPQf-Rxryr4POeV-MXpxO_NPxUv-SeULIk1shuc2gsbrxCpl-pi_rgA/exec';
-
 // ─── Auth ────────────────────────────────────────────────────
 const userRaw = localStorage.getItem('sm_user');
 if (!userRaw) window.location.href = 'login.html';
 const me = JSON.parse(userRaw || '{}');
 if (me.expires_at && Date.now() > me.expires_at) {
   localStorage.removeItem('sm_user');
+  SM_API.clearToken();
   window.location.href = 'login.html';
 }
+// no token (e.g. legacy session) → force re-login so authed calls work
+if (!SM_API.getToken()) window.location.href = 'login.html';
 
 // ─── Helpers ─────────────────────────────────────────────────
 function escapeHtml(s) {
@@ -1054,6 +1056,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 function logout() {
   localStorage.removeItem('sm_user');
+  SM_API.clearToken();
   window.location.href = 'login.html';
 }
 
@@ -1215,14 +1218,8 @@ function sportName(s) { return (s||'').replace(/^[^฀-๿\w]+/,'').trim(); }
 // ─── Load Activities ──────────────────────────────────────────
 async function loadActivities() {
   try {
-    let list = [];
-    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
-      list = demo();
-    } else {
-      const r = await fetch(APPS_SCRIPT_URL + '?action=getActivities&_t=' + Date.now(), { cache: 'no-store' });
-      const d = await r.json();
-      list = (d.success && d.activities && d.activities.length) ? d.activities : demo();
-    }
+    const d = await SM_API.call('getActivities', { _t: Date.now() });
+    const list = (d.success && d.activities && d.activities.length) ? d.activities : demo();
     allActivities = list.filter(a => new Date(a.datetime) > new Date());
   } catch(e) {
     allActivities = demo();
@@ -1482,12 +1479,12 @@ function showDetail(id) {
   if (a.lat && a.lng && map) map.flyTo([a.lat, a.lng], 15, { duration:1 });
 
   // Fetch creator photo for other users' posts
-  if (!isMine && APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
-    fetch(APPS_SCRIPT_URL + '?action=getProfile&username=' + encodeURIComponent(a.username))
-      .then(r => r.json())
+  if (!isMine) {
+    SM_API.call('getProfile', { username: a.username })
       .then(d => {
-        if (!d.success || !d.photo_base64) return;
-        const safePhoto = safeImageUrl(d.photo_base64);
+        const photo = d && (d.photo_url || d.photo_base64);
+        if (!d || !d.success || !photo) return;
+        const safePhoto = safeImageUrl(photo);
         const el = document.getElementById('creator-avatar-' + aid);
         if (!el || !safePhoto) return;
         const pimg = document.createElement('img');
@@ -1541,10 +1538,7 @@ function joinActivity(id) {
   if (!joiners[id].includes(me.username)) joiners[id].push(me.username);
   localStorage.setItem('sm_activity_joiners', JSON.stringify(joiners));
 
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST', headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action:'joinActivity', activity_id:id, username:me.username })
-  }).catch(() => {});
+  SM_API.call('joinActivity', { activity_id:id }).catch(() => {});
 
   showToast('เข้าร่วมกิจกรรมสำเร็จ! ✓');
   closeModal('modal-detail');
@@ -1561,10 +1555,7 @@ function leaveActivity(id) {
     localStorage.setItem('sm_activity_joiners', JSON.stringify(joiners));
   }
 
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST', headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action:'leaveActivity', activity_id:id, username:me.username })
-  }).catch(() => {});
+  SM_API.call('leaveActivity', { activity_id:id }).catch(() => {});
 
   showToast('ออกจากกิจกรรมแล้ว');
   closeModal('modal-detail');
@@ -1677,10 +1668,9 @@ document.addEventListener('click', function(e) {
 });
 
 async function pollNotifications() {
-  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') return;
+  if (!SM_API.getToken()) return;
   try {
-    const r = await fetch(APPS_SCRIPT_URL + '?action=getNotifications&username=' + encodeURIComponent(me.username));
-    const d = await r.json();
+    const d = await SM_API.call('getNotifications', {});
     if (d.success && d.notifications && d.notifications.length) {
       d.notifications.forEach(n => {
         addNotification({
@@ -1804,43 +1794,30 @@ async function handlePost(e) {
   btn.disabled = true;
 
   const payload = {
-    action:'postActivity', username:me.username, sport, location_name:loc,
+    sport, location_name:loc,
     lat:postLat, lng:postLng, datetime:dt, description:desc, max_people:parseInt(mp),
     privacy: document.getElementById('p-privacy').value,
     image_url: postImageBase64 || '',
     display_name: (profileData && profileData.displayName) || me.username
   };
 
-  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
-    const newA = { ...payload, id:'demo_'+Date.now(), created_at:new Date().toISOString() };
-    delete newA.action;
-    allActivities.unshift(newA);
-    if (postLat && postLng && map) map.flyTo([postLat, postLng], 15);
-    applyFilters();
-    showToast('โพสกิจกรรมสำเร็จ! 🎉');
-    if (typeof gtag !== 'undefined') gtag('event', 'activity_created', { sport });
-    resetForm();
-    closeModal('modal-create');
-  } else {
-    try {
-      const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
-      const data = await res.json();
-      if (data.success) {
-        const newA = { ...payload, id: data.id, created_at: new Date().toISOString() };
-        delete newA.action;
-        allActivities.unshift(newA);
-        applyFilters();
-        showToast('โพสกิจกรรมสำเร็จ! 🎉');
-        if (typeof gtag !== 'undefined') gtag('event', 'activity_created', { sport });
-        resetForm();
-        closeModal('modal-create');
-        loadActivities();
-      } else {
-        showToast(data.message || 'เกิดข้อผิดพลาด', true);
-      }
-    } catch(err) {
-      showToast('ไม่สามารถเชื่อมต่อได้: ' + err.message, true);
+  try {
+    const data = await SM_API.call('postActivity', payload);
+    if (data.success) {
+      const newA = { ...payload, username: me.username, id: data.id, join_count: 0, created_at: new Date().toISOString() };
+      allActivities.unshift(newA);
+      applyFilters();
+      if (postLat && postLng && map) map.flyTo([postLat, postLng], 15);
+      showToast('โพสกิจกรรมสำเร็จ! 🎉');
+      if (typeof gtag !== 'undefined') gtag('event', 'activity_created', { sport });
+      resetForm();
+      closeModal('modal-create');
+      loadActivities();
+    } else {
+      showToast(data.message || 'เกิดข้อผิดพลาด', true);
     }
+  } catch(err) {
+    showToast('ไม่สามารถเชื่อมต่อได้: ' + (err && err.message || ''), true);
   }
 
   document.getElementById('post-btn-text').style.display = 'inline';
@@ -2135,12 +2112,7 @@ async function submitIdVerify() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'submitIdVerify', email: me.email, username: me.username })
-    });
-    const data = await res.json();
+    const data = await SM_API.call('submitIdVerify', { email: me.email, username: me.username });
     if (data.success) {
       profileData.idVerifyStatus = 'pending';
       me.id_verify_status = 'pending';
@@ -2174,23 +2146,16 @@ async function saveProfile() {
       showToast('สามารถเปลี่ยนชื่อที่แสดงได้วันละ 1 ครั้งเท่านั้น', true);
       return;
     }
-    // Sync to backend
-    if (APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
-      try {
-        const res = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: 'updateDisplayName', username: me.username, new_display_name: newDisplayName })
-        });
-        const d = await res.json();
-        if (!d.success) {
-          showToast(d.message || 'ไม่สามารถเปลี่ยนชื่อได้', true);
-          return;
-        }
-      } catch(e) {
-        showToast('ไม่สามารถเชื่อมต่อได้', true);
+    // Sync to backend (server enforces the daily limit authoritatively)
+    try {
+      const d = await SM_API.call('updateDisplayName', { new_display_name: newDisplayName });
+      if (!d.success) {
+        showToast(d.message || 'ไม่สามารถเปลี่ยนชื่อได้', true);
         return;
       }
+    } catch(e) {
+      showToast('ไม่สามารถเชื่อมต่อได้', true);
+      return;
     }
     localStorage.setItem('sm_displayname_last_edit', today);
   }
@@ -2209,14 +2174,15 @@ async function saveProfile() {
   localStorage.setItem('sm_profile', JSON.stringify(profileData));
   applyProfile();
 
-  // Sync photo to backend (fire-and-forget, non-blocking)
-  if (APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
-    if (profileData.photoBase64) {
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'saveProfilePhoto', username: me.username, photo_base64: profileData.photoBase64 })
-      }).catch(() => {});
-    }
+  // Sync photo to backend; store the hosted URL it returns
+  if (profileData.photoBase64) {
+    try {
+      const d = await SM_API.call('saveProfilePhoto', { photo_base64: profileData.photoBase64 });
+      if (d && d.success && d.photo_url) {
+        profileData.photoUrl = d.photo_url;
+        localStorage.setItem('sm_profile', JSON.stringify(profileData));
+      }
+    } catch (e) {}
   }
 
   closeModal('modal-profile');

@@ -1319,10 +1319,8 @@
   </div>
 </div>
 
+<script src="assets/api.js"></script>
 <script>
-  // ← ใส่ URL ที่ได้จากการ Deploy Google Apps Script ตรงนี้
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2ByyVNuhwblvpPQf-Rxryr4POeV-MXpxO_NPxUv-SeULIk1shuc2gsbrxCpl-pi_rgA/exec';
-
   // Signup modal
   function openSignupModal() {
     document.getElementById('signup-modal').classList.add('open');
@@ -1440,14 +1438,6 @@
     localStorage.setItem('sm_notifications', JSON.stringify(notifs));
   }
 
-  async function hashPassword(password) {
-    const msgBuffer = new TextEncoder().encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    return Array.from(new Uint8Array(hashBuffer)).map(function(b) {
-      return b.toString(16).padStart(2, '0');
-    }).join('');
-  }
-
   function setSubmitLoading(loading) {
     document.getElementById('signup-btn-text').style.display = loading ? 'none' : 'inline';
     document.getElementById('signup-btn-spinner').style.display = loading ? 'inline-block' : 'none';
@@ -1468,10 +1458,8 @@
 
       const sports = Array.from(document.querySelectorAll('.sport-checkbox:checked')).map(function(cb) { return cb.value; });
       const preferred_time = Array.from(document.querySelectorAll('.time-checkbox:checked')).map(function(cb) { return cb.value; });
-      const password_hash = await hashPassword(document.getElementById('s-password').value);
 
       const payload = {
-        action: 'signup',
         fullname: document.getElementById('s-fullname').value.trim(),
         username: document.getElementById('s-username').value.trim(),
         email: document.getElementById('s-email').value.trim(),
@@ -1481,25 +1469,12 @@
         skill_level: document.getElementById('s-skill').value,
         province: document.getElementById('s-province').value,
         preferred_time: preferred_time,
-        password_hash: password_hash
+        // plaintext over HTTPS; hashed (argon2) server-side
+        password: document.getElementById('s-password').value
       };
 
-      // ถ้ายังไม่ได้ตั้ง URL ให้แสดง success ทันที (demo mode)
-      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
-        setSubmitLoading(false);
-        saveWelcomeNotification(payload.username);
-        document.getElementById('signup-form-wrap').style.display = 'none';
-        document.getElementById('signup-success').style.display = 'flex';
-        return;
-      }
-
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
+        const data = await SM_API.call('signup', payload);
 
         if (data.success) {
           saveWelcomeNotification(payload.username);

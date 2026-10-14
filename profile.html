@@ -339,9 +339,8 @@
 
 </div>
 
+<script src="assets/api.js"></script>
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2ByyVNuhwblvpPQf-Rxryr4POeV-MXpxO_NPxUv-SeULIk1shuc2gsbrxCpl-pi_rgA/exec';
-
 const SKILL_LABELS = {
   beginner: { th: 'มือใหม่', cls: 'skill-beginner', icon: '🌱' },
   mid:      { th: 'กลาง',   cls: 'skill-mid',       icon: '⚡' },
@@ -393,14 +392,8 @@ async function loadProfile() {
   }
 
   // Fetch from backend
-  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYED_URL') {
-    showError('ไม่สามารถโหลดโปรไฟล์ในโหมด demo ได้');
-    return;
-  }
-
   try {
-    const res = await fetch(APPS_SCRIPT_URL + '?action=getProfile&username=' + encodeURIComponent(username));
-    const data = await res.json();
+    const data = await SM_API.call('getProfile', { username });
     if (!data.success) {
       showError(data.message || 'ไม่พบผู้ใช้นี้');
       return;
@@ -422,7 +415,7 @@ function renderProfile(data, myProfile) {
 
   // Avatar
   const avatarEl = document.getElementById('avatar-el');
-  const photoSrc = (myProfile && myProfile.photoBase64) || data.photo_base64 || '';
+  const photoSrc = (myProfile && (myProfile.photoUrl || myProfile.photoBase64)) || data.photo_url || data.photo_base64 || '';
 
   if (photoSrc) {
     avatarEl.innerHTML = `<img src="${photoSrc}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
