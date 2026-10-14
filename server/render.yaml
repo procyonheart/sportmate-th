@@ -1,0 +1,31 @@
+# Render Blueprint for the SportMate TH backend.
+# Deploy: Render Dashboard -> New -> Blueprint -> pick this repo + branch.
+# Set the `sync: false` vars (secrets) in the Render UI; the rest are prefilled.
+services:
+  - type: web
+    name: sportmate-api
+    runtime: node
+    rootDir: server
+    plan: free
+    branch: backend-migration
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL          # Neon POOLED connection string (-pooler host)
+        sync: false
+      - key: JWT_SECRET            # Render generates a strong value once
+        generateValue: true
+      - key: SITE_URL
+        value: https://procyonheart.github.io/sportmate-th
+      - key: CORS_ORIGINS
+        value: https://procyonheart.github.io,http://localhost:3000
+      - key: RESEND_API_KEY        # email verification (leave unset = emails log only)
+        sync: false
+      - key: MAIL_FROM
+        value: SportMate TH <onboarding@resend.dev>
+      - key: ADMIN_EMAIL           # receives ID-verify requests (optional)
+        sync: false
+      - key: CLOUDINARY_URL        # image hosting (leave unset = base64 fallback)
+        sync: false
