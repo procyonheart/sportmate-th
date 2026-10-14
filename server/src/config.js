@@ -13,6 +13,9 @@ export const config = {
   corsOrigins: (process.env.CORS_ORIGINS ||
     'https://procyonheart.github.io,http://localhost:3000')
     .split(',').map((s) => s.trim()).filter(Boolean),
+  // launch without a verified email domain: auto-verify new accounts so they
+  // can log in immediately. Flip to false once a Resend domain is set up.
+  autoVerify: process.env.AUTO_VERIFY === 'true',
   resendApiKey: process.env.RESEND_API_KEY || '',
   mailFrom: process.env.MAIL_FROM || 'SportMate TH <onboarding@resend.dev>',
   adminEmail: process.env.ADMIN_EMAIL || '',

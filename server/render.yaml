@@ -21,6 +21,8 @@ services:
         value: https://procyonheart.github.io/sportmate-th
       - key: CORS_ORIGINS
         value: https://procyonheart.github.io,http://localhost:3000
+      - key: AUTO_VERIFY           # "true" = skip email verification (launch mode); set "false" once a Resend domain is verified
+        value: "true"
       - key: RESEND_API_KEY        # email verification (leave unset = emails log only)
         sync: false
       - key: MAIL_FROM

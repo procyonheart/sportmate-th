@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query } from '../db.js';
 import { hashPassword, verifyArgon2, sha256, issueToken } from '../auth.js';
 import { sendVerificationEmail, sendIdVerifyAdminAlert } from '../email.js';
+import { config } from '../config.js';
 
 const signupSchema = z.object({
   fullname: z.string().min(1),
@@ -40,22 +41,32 @@ export default async function authRoutes(fastify) {
     }
 
     const passwordHash = await hashPassword(d.password);
-    const verifyToken = crypto.randomUUID();
+    // AUTO_VERIFY launch mode: mark verified and skip the email step
+    const autoVerify = config.autoVerify;
+    const verifyToken = autoVerify ? null : crypto.randomUUID();
 
     await query(
       `INSERT INTO members
         (fullname, username, email, phone, sports, password_hash, password_algo,
          gender, skill_level, province, preferred_time, verify_token, is_verified,
          id_verify_status, display_name)
-       VALUES ($1,$2,$3,$4,$5,$6,'argon2',$7,$8,$9,$10,$11,FALSE,'unverified',$2)`,
+       VALUES ($1,$2,$3,$4,$5,$6,'argon2',$7,$8,$9,$10,$11,$12,'unverified',$2)`,
       [d.fullname, d.username, d.email, d.phone, asText(d.sports), passwordHash,
-       d.gender, d.skill_level, d.province, asText(d.preferred_time), verifyToken]
+       d.gender, d.skill_level, d.province, asText(d.preferred_time), verifyToken, autoVerify]
     );
 
-    try { await sendVerificationEmail(d.email, d.fullname, d.username, verifyToken); }
-    catch (e) { req.log.error({ e }, 'verification email failed'); }
+    if (!autoVerify) {
+      try { await sendVerificationEmail(d.email, d.fullname, d.username, verifyToken); }
+      catch (e) { req.log.error({ e }, 'verification email failed'); }
+    }
 
-    return reply.send({ success: true, message: 'สมัครสมาชิกสำเร็จ! กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ' });
+    return reply.send({
+      success: true,
+      auto_verified: autoVerify,
+      message: autoVerify
+        ? 'สมัครสมาชิกสำเร็จ! เข้าสู่ระบบได้เลย'
+        : 'สมัครสมาชิกสำเร็จ! กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ',
+    });
   });
 
   // ─── Login ────────────────────────────────────────────────
