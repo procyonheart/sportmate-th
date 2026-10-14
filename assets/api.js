@@ -7,7 +7,7 @@
  * backend origin (e.g. for local dev). Defaults to the deployed API.
  */
 (function () {
-  var DEFAULT_BASE = 'https://sportmate-api.onrender.com'; // <-- set to your deployed backend
+  var DEFAULT_BASE = 'https://sportmate-th.onrender.com'; // deployed backend (Render)
   var ORIGIN = (window.SM_API_BASE || DEFAULT_BASE).replace(/\/+$/, '');
   var BASE = ORIGIN + '/api';
 
