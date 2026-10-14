@@ -3,14 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="icon" type="image/svg+xml" href="/brand_assets/icon.svg">
   <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="หาเพื่อนออกกำลังกายใกล้คุณ — SportMate TH">
   <link rel="canonical" href="https://procyonheart.github.io/sportmate-th/dashboard.html">
   <title>หาเพื่อนกีฬา — SportMate TH</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;900&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet CSS: cdnjs primary, jsdelivr/unpkg fallback if blocked -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+        onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';">
+  <!-- Leaflet JS: load with multi-CDN fallback so a single blocked CDN doesn't break the map -->
+  <script>
+    (function () {
+      var cdns = [
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+      ];
+      (function load(i) {
+        if (i >= cdns.length) { console.error('[SportMate] Leaflet: โหลดจากทุก CDN ไม่สำเร็จ'); return; }
+        var s = document.createElement('script');
+        s.src = cdns[i];
+        s.async = false; // keep execution order deterministic
+        s.onerror = function () { console.warn('[SportMate] Leaflet CDN ใช้ไม่ได้: ' + cdns[i]); load(i + 1); };
+        document.head.appendChild(s);
+      })(0);
+    })();
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -386,6 +406,11 @@
     }
 
     /* Leaflet overrides */
+    /* Dark map from keyless OSM tiles: invert+hue-rotate only the tile pane,
+       so markers, popups and controls (separate panes) keep their real colors */
+    .leaflet-tile-pane {
+      filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.82);
+    }
     .leaflet-control-attribution {
       background: rgba(0,0,0,0.5) !important;
       color: rgba(255,255,255,0.35) !important; font-size:9px !important;
@@ -969,6 +994,11 @@ if (me.expires_at && Date.now() > me.expires_at) {
 function escapeHtml(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+// Only allow inline image data or https URLs — blocks javascript:/attribute-breakout payloads
+function safeImageUrl(u) {
+  u = String(u ?? '').trim();
+  return (/^data:image\/(png|jpe?g|gif|webp|avif);/i.test(u) || /^https:\/\/[^\s"'<>]+$/i.test(u)) ? u : '';
+}
 
 // ─── State ───────────────────────────────────────────────────
 let map, userMarker;
@@ -1077,33 +1107,65 @@ function showToast(msg, isErr) {
 
 // ─── Map ─────────────────────────────────────────────────────
 function initMap() {
-  map = L.map('map', { zoomControl: false }).setView([13.75, 100.52], 12);
+  const mapEl = document.getElementById('map');
+  if (!mapEl) {
+    console.error('[SportMate map] ไม่พบ element #map');
+    return;
+  }
+  if (typeof L === 'undefined') {
+    // Leaflet may still be loading from a fallback CDN — retry (~6s) before giving up
+    initMap._tries = (initMap._tries || 0) + 1;
+    if (initMap._tries <= 40) { setTimeout(initMap, 150); return; }
+    mapEl.innerHTML = '<div style="padding:20px;color:#fff;background:#1a1a1a;border-radius:12px;margin:20px">โหลดแผนที่ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตหรือการบล็อก CDN แล้วรีเฟรชหน้า</div>';
+    console.error('[SportMate map] Leaflet ไม่ได้โหลด');
+    return;
+  }
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd', maxZoom: 19
-  }).addTo(map);
+  try {
+    map = L.map(mapEl, { zoomControl: false }).setView([13.75, 100.52], 12);
 
-  L.control.zoom({ position: 'topright' }).addTo(map);
+    // OSM (ฟรี ไม่ต้องใช้ API key) + ทำให้เป็นโทนมืดด้วย CSS filter บน .leaflet-tile-pane
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19, crossOrigin: true
+    }).addTo(map);
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      function(pos) {
+    L.control.zoom({ position: 'topright' }).addTo(map);
+    // ป้องกัน Leaflet คำนวณขนาดแผนที่ผิดตอนหน้าเพิ่งแสดง
+    requestAnimationFrame(() => map && map.invalidateSize(true));
+    window.addEventListener('resize', () => map && map.invalidateSize());
+
+    const renderUserLocation = function (pos) {
+      if (pos && pos.coords) {
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
         map.setView([userLat, userLng], 14);
-
         const uIcon = L.divIcon({
           html: '<div style="width:20px;height:20px;border-radius:50%;background:#FF4D1C;border:3px solid white;box-shadow:0 0 0 8px rgba(255,77,28,0.18),0 0 20px rgba(255,77,28,0.6);"></div>',
           iconSize: [20,20], iconAnchor: [10,10], className: ''
         });
         userMarker = L.marker([userLat, userLng], { icon: uIcon }).addTo(map)
           .bindTooltip('📍 คุณอยู่ที่นี่', { permanent:false, direction:'top' });
+      }
+      // ต้องแสดงกิจกรรมแม้ผู้ใช้ปฏิเสธ GPS หรือเบราว์เซอร์ไม่รองรับ
+      renderMarkers();
+    };
 
-        renderMarkers();
-      },
-      function() { renderMarkers(); }
-    );
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        renderUserLocation,
+        function (err) {
+          console.warn('[SportMate map] ใช้ตำแหน่ง GPS ไม่ได้:', err && err.message);
+          renderUserLocation(null);
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+      );
+    } else {
+      renderUserLocation(null);
+    }
+  } catch (err) {
+    console.error('[SportMate map] เริ่มต้นแผนที่ไม่สำเร็จ:', err);
+    mapEl.innerHTML = '<div style="padding:20px;color:#fff;background:#1a1a1a;border-radius:12px;margin:20px">แผนที่เริ่มทำงานไม่สำเร็จ กรุณารีเฟรชหน้าและตรวจสอบ Console</div>';
   }
 }
 
@@ -1293,7 +1355,7 @@ function renderFeed(list) {
         <span style="font-size:12px;color:#505050;">${dname}${isMine?' <span style="color:var(--primary);font-size:10px;">• โพสของฉัน</span>':''}${a.privacy==='private'?' <span class="privacy-badge">🔒</span>':''}</span>
       </div>
       ${desc?`<div style="margin-top:5px;font-size:12px;color:#606060;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${desc}</div>`:''}
-      ${a.image_url?`<div style="margin-top:8px;border-radius:10px;overflow:hidden;"><img src="${a.image_url}" alt="รูปกิจกรรม" style="width:100%;height:120px;object-fit:cover;display:block;"></div>`:''}
+      ${(img=>img?`<div style="margin-top:8px;border-radius:10px;overflow:hidden;"><img src="${escapeHtml(img)}" alt="รูปกิจกรรม" style="width:100%;height:120px;object-fit:cover;display:block;"></div>`:'')(safeImageUrl(a.image_url))}
     </div>`;
   }).join('');
 }
@@ -1343,13 +1405,14 @@ function showDetail(id) {
   const detailRemaining = Math.max(0, (a.max_people || 1) - detailJoinCount);
 
   // Creator avatar
-  const hasPhoto = isMine && profileData.photoBase64;
+  const safeOwnPhoto = isMine ? safeImageUrl(profileData.photoBase64) : '';
+  const hasPhoto = !!safeOwnPhoto;
   const creatorBg = isMine ? (profileData.avatarColor || '#1A1A1A') : '#1A1A1A';
   const creatorAvatarInner = hasPhoto
-    ? `<img src="${profileData.photoBase64}" style="width:100%;height:100%;object-fit:cover;display:block;">`
+    ? `<img src="${escapeHtml(safeOwnPhoto)}" style="width:100%;height:100%;object-fit:cover;display:block;">`
     : `<span style="font-size:22px;">${isMine ? (profileData.avatarEmoji||'🏃') : '🏃'}</span>`;
   const avatarClickFn = hasPhoto
-    ? `event.stopPropagation();openPhotoViewer('${profileData.photoBase64.replace(/'/g,"\\'")}');`
+    ? `event.stopPropagation();openPhotoViewer('${safeOwnPhoto.replace(/'/g,"\\'")}');`
     : `window.location='profile.html?user=${uname}';`;
   const verifyBadge = (a.id_verify_status === 'approved' || (isMine && me.id_verify_status === 'approved'))
     ? `<span style="font-size:10px;background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:6px;padding:1px 6px;margin-left:4px;">✓ ยืนยันตัวตน</span>` : '';
@@ -1408,9 +1471,10 @@ function showDetail(id) {
 
   if (a.image_url) {
     const imgEl = document.getElementById('detail-img');
-    if (imgEl) {
+    const safeImg = safeImageUrl(a.image_url);
+    if (imgEl && safeImg) {
       imgEl.onerror = () => { const w = document.getElementById('detail-img-wrap'); if (w) w.style.display = 'none'; };
-      imgEl.src = a.image_url;
+      imgEl.src = safeImg;
     }
   }
 
@@ -1423,9 +1487,14 @@ function showDetail(id) {
       .then(r => r.json())
       .then(d => {
         if (!d.success || !d.photo_base64) return;
+        const safePhoto = safeImageUrl(d.photo_base64);
         const el = document.getElementById('creator-avatar-' + aid);
-        if (!el) return;
-        el.innerHTML = `<img src="${d.photo_base64}" style="width:100%;height:100%;object-fit:cover;display:block;" onclick="event.stopPropagation();openPhotoViewer('${d.photo_base64.replace(/'/g, "\\'")}')">`;
+        if (!el || !safePhoto) return;
+        const pimg = document.createElement('img');
+        pimg.src = safePhoto;
+        pimg.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        pimg.onclick = (e) => { e.stopPropagation(); openPhotoViewer(safePhoto); };
+        el.replaceChildren(pimg);
         el.title = 'ดูรูปโปรไฟล์';
       }).catch(() => {});
   }
@@ -1845,8 +1914,9 @@ function showPostPreviewMap(lat, lng) {
       scrollWheelZoom: false, doubleClickZoom: false,
       touchZoom: false, keyboard: false
     }).setView([lat, lng], 15);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', maxZoom: 19
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
     }).addTo(postPreviewMap);
   } else {
     postPreviewMap.setView([lat, lng], 15);
