@@ -406,11 +406,14 @@
     }
 
     /* Leaflet overrides */
-    /* Dark map from keyless OSM tiles: invert+hue-rotate only the tile pane,
-       so markers, popups and controls (separate panes) keep their real colors */
+    /* Map uses CARTO dark_matter tiles (already dark) — just a subtle polish,
+       no color inversion. A hint of warmth ties it to the orange brand. */
     .leaflet-tile-pane {
-      filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.82);
+      filter: brightness(1.04) contrast(1.05) saturate(1.08);
     }
+    /* activity pin hover — transform only, spring easing */
+    .sm-marker { transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); transform-origin: center bottom; will-change: transform; }
+    .sm-marker:hover { transform: scale(1.14); }
     .leaflet-control-attribution {
       background: rgba(0,0,0,0.5) !important;
       color: rgba(255,255,255,0.35) !important; font-size:9px !important;
@@ -1127,10 +1130,15 @@ function initMap() {
   try {
     map = L.map(mapEl, { zoomControl: false }).setView([13.75, 100.52], 12);
 
-    // OSM (ฟรี ไม่ต้องใช้ API key) + ทำให้เป็นโทนมืดด้วย CSS filter บน .leaflet-tile-pane
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19, crossOrigin: true
+    // Esri Dark Gray Canvas — free, no API key, clean dark basemap.
+    // maxNativeZoom 16 (service limit) + maxZoom 19 upscales instead of blanking.
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles © <a href="https://www.esri.com/">Esri</a>',
+      maxNativeZoom: 16, maxZoom: 19, crossOrigin: true
+    }).addTo(map);
+    // place/road labels overlay
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+      maxNativeZoom: 16, maxZoom: 19, crossOrigin: true
     }).addTo(map);
 
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -1219,10 +1227,13 @@ function sportName(s) { return (s||'').replace(/^[^฀-๿\w]+/,'').trim(); }
 async function loadActivities() {
   try {
     const d = await SM_API.call('getActivities', { _t: Date.now() });
-    const list = (d.success && d.activities && d.activities.length) ? d.activities : demo();
-    allActivities = list.filter(a => new Date(a.datetime) > new Date());
+    if (d && d.success && Array.isArray(d.activities)) {
+      // real data (may legitimately be empty) — show exactly what the server has
+      allActivities = d.activities.filter(a => new Date(a.datetime) > new Date());
+    }
+    // on a failed/odd response: keep whatever is already shown, never inject demo data
   } catch(e) {
-    allActivities = demo();
+    // network error (e.g. Render cold start) — keep the current list rather than wiping it
   }
   applyFilters();
 }
@@ -1368,7 +1379,7 @@ function renderMarkers(list) {
     if (!a.lat || !a.lng) return;
     const em = emoji(a.sport);
     const icon = L.divIcon({
-      html: `<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#FF4D1C,#FF6B3D);border:2.5px solid rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(255,77,28,0.55),0 1px 0 rgba(255,255,255,0.25) inset;cursor:pointer;">${em}</div>`,
+      html: `<div class="sm-marker" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#FF4D1C,#FF6B3D);border:2.5px solid rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(255,77,28,0.55),0 1px 0 rgba(255,255,255,0.25) inset;cursor:pointer;">${em}</div>`,
       iconSize:[44,44], iconAnchor:[22,22], className:''
     });
     const m = L.marker([a.lat, a.lng], { icon })
@@ -1891,9 +1902,9 @@ function showPostPreviewMap(lat, lng) {
       scrollWheelZoom: false, doubleClickZoom: false,
       touchZoom: false, keyboard: false
     }).setView([lat, lng], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles © <a href="https://www.esri.com/">Esri</a>',
+      maxNativeZoom: 16, maxZoom: 19
     }).addTo(postPreviewMap);
   } else {
     postPreviewMap.setView([lat, lng], 15);
